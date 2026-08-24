@@ -16,24 +16,10 @@ SHEET_USERS = 'Users'
 SHEET_LOGS = 'Login_History'
 SHEET_REPORTS = 'Incident_Reports'
 
-# Where photos are saved. Locally this is a folder on your PC. On
-# Streamlit Community Cloud this folder is temporary (wiped on restart)
-# — fine for a demo, but for real use later switch this to Google Drive.
 PHOTOS_DIR = 'reports/photos'
-
-# The web address people should scan/visit to reach this app.
-# - Running locally: your PC's LAN IP, e.g. "192.168.1.50:8501"
-#   (find it with `ipconfig` on Windows / `ifconfig` on Mac).
-# - Running on Streamlit Community Cloud: the public URL it gives you
-#   after deploying, e.g. "your-app-name.streamlit.app" (no port needed).
 APP_URL = "your-app-name.streamlit.app"
-
-# Logo shown on the login page. Put your logo file in the same folder
-# as this script and update the filename below.
 LOGO_PATH = "logo.png"
 
-# The checklist officers see on patrol. Edit this list to match what
-# you actually want them checking per level.
 CHECKLIST_ITEMS = [
     "Fire extinguisher missing / expired",
     "Blocked emergency exit",
@@ -45,9 +31,6 @@ CHECKLIST_ITEMS = [
 
 LEVELS = ["Level 1", "Level 2", "Level 3", "Roof", "Basement"]
 
-# ============================================================
-# LIGHT / PROFESSIONAL STYLING
-# ============================================================
 def inject_css():
     st.markdown("""
         <style>
@@ -66,9 +49,6 @@ def inject_css():
     """, unsafe_allow_html=True)
 
 
-# ============================================================
-# GOOGLE SHEETS CONNECTION
-# ============================================================
 @st.cache_resource
 def get_sheet_client():
     try:
@@ -76,13 +56,10 @@ def get_sheet_client():
             "https://spreadsheets.google.com/feeds",
             "https://www.googleapis.com/auth/drive"
         ]
-        # On Streamlit Community Cloud: reads the service account JSON you
-        # pasted into the app's "Secrets" box (see deployment instructions).
         if "gcp_service_account" in st.secrets:
             creds = Credentials.from_service_account_info(
                 st.secrets["gcp_service_account"], scopes=scope
             )
-        # Running locally: reads the credentials.json file instead.
         else:
             creds = Credentials.from_service_account_file(JSON_KEY_FILE, scopes=scope)
         client = gspread.authorize(creds)
@@ -112,14 +89,6 @@ def get_worksheet(name):
         return sheet
 
 
-# ============================================================
-# AUTH HELPERS
-# NOTE: passwords are stored in plain text below, matching the
-# "open for now, secure it later" plan. Before opening this up beyond
-# your team, swap register_user/login_user to hash with bcrypt:
-#   pip install bcrypt
-#   bcrypt.hashpw(password.encode(), bcrypt.gensalt())
-# ============================================================
 def user_exists(sheet, emp_id):
     data = sheet.get_all_values()
     if not data or len(data) < 2:
@@ -145,10 +114,6 @@ def log_login(sheet, emp_id, status):
     sheet.append_row([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), emp_id, status])
 
 
-# ============================================================
-# REPORT SAVING — photo goes to your local disk, sheet just
-# stores the path + metadata (keeps sheet cells small and fast).
-# ============================================================
 def save_report(sheet, emp_id, level, checked_items, description, photo_file):
     report_id = f"RPT-{datetime.now().strftime('%Y%m%d%H%M%S')}"
 
@@ -169,10 +134,6 @@ def save_report(sheet, emp_id, level, checked_items, description, photo_file):
     return report_id
 
 
-# ============================================================
-# QR CODE — encodes the level directly in the URL, so each
-# printed/posted QR only ever reports for that floor.
-# ============================================================
 def make_qr_image(level):
     scheme = "https" if "streamlit.app" in APP_URL else "http"
     url = f"{scheme}://{APP_URL}/?level={level.replace(' ', '+')}"
@@ -185,9 +146,6 @@ def make_qr_image(level):
     return buf.getvalue(), url
 
 
-# ============================================================
-# MAIN APP
-# ============================================================
 def main():
     st.set_page_config(page_title="FLS Command Center", layout="centered")
     inject_css()
@@ -196,7 +154,6 @@ def main():
         st.session_state.logged_in = False
         st.session_state.user_id = None
 
-    # Level comes from the QR code's URL, e.g. ?level=Level+2
     query_level = st.query_params.get("level", LEVELS[0])
     if query_level not in LEVELS:
         query_level = LEVELS[0]
@@ -246,6 +203,14 @@ def main():
                     st.error("That ID already exists.")
 
         st.markdown("---")
+        st.caption("Not connected to the spreadsheet yet? Preview the app anyway:")
+        if st.button("👀 Preview without logging in"):
+            st.session_state.logged_in = True
+            st.session_state.user_id = "DEMO-001"
+            st.session_state.level = query_level
+            st.session_state.preview_mode = True
+            st.rerun()
+
         with st.expander("Generate QR codes for each level (admin)"):
             for lvl in LEVELS:
                 img_bytes, url = make_qr_image(lvl)
@@ -255,11 +220,14 @@ def main():
                 c2.caption(url)
 
     else:
+        if st.session_state.get('preview_mode'):
+            st.sidebar.warning("Preview mode — not connected to the spreadsheet. Nothing here is saved.")
         st.sidebar.markdown(f"**Officer {st.session_state.user_id}**")
         st.sidebar.caption(f"Level: {st.session_state.get('level', query_level)}")
-        is_admin = st.sidebar.checkbox("Admin mode")  # TODO: check real Role once security is added
+        is_admin = st.sidebar.checkbox("Admin mode")
         if st.sidebar.button("Log out"):
             st.session_state.logged_in = False
+            st.session_state.preview_mode = False
             st.rerun()
 
         sheet_reports = get_worksheet(SHEET_REPORTS)
@@ -267,50 +235,3 @@ def main():
         if is_admin:
             st.title("Admin dashboard")
             admin_tab1, admin_tab2 = st.tabs(["Login history", "Incident reports"])
-
-            with admin_tab1:
-                sheet_logs = get_worksheet(SHEET_LOGS)
-                if sheet_logs:
-                    df_logs = pd.DataFrame(sheet_logs.get_all_records())
-                    st.dataframe(df_logs, use_container_width=True)
-
-            with admin_tab2:
-                if sheet_reports:
-                    df_reports = pd.DataFrame(sheet_reports.get_all_records())
-                    st.dataframe(df_reports, use_container_width=True)
-                    st.caption("Photo_Path points to the file on your PC — open reports/photos/ to view images.")
-
-        else:
-            st.markdown(
-                f"<h3>Report an issue</h3>"
-                f"<p style='color:gray;'>{st.session_state.get('level', query_level)} &middot; "
-                f"Officer {st.session_state.user_id}</p>",
-                unsafe_allow_html=True
-            )
-
-            with st.form("report_form"):
-                st.markdown("**Select what applies**")
-                checked = []
-                for item in CHECKLIST_ITEMS:
-                    if st.checkbox(item, key=f"chk_{item}"):
-                        checked.append(item)
-
-                uploaded_file = st.file_uploader("Attach photo", type=['jpg', 'png', 'jpeg'])
-                description = st.text_area("Describe the problem", placeholder="اكتب المشكلة هنا...")
-
-                submitted = st.form_submit_button("Submit report")
-
-                if submitted:
-                    if not checked and not description:
-                        st.error("Select at least one item or add a description.")
-                    else:
-                        report_id = save_report(
-                            sheet_reports, st.session_state.user_id,
-                            st.session_state.get('level', query_level),
-                            checked, description, uploaded_file
-                        )
-                        st.success(f"Report submitted — {report_id}")
-
-
-if __name__ == "__main__":
-    main()
