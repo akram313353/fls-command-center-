@@ -1034,6 +1034,37 @@ function renderIssueDetailModal(){
 /* ============================================================
    EVENTS
    ============================================================ */
+/* ============================================================
+   LOGOUT — shared by the logout button AND the phone/browser back-button
+   trap below, so both paths ask the same yes/no question and log the
+   same total-time summary before actually signing out.
+   Returns true if the officer confirmed and was logged out, false if
+   they cancelled (and are still signed in).
+   ============================================================ */
+function confirmAndLogout(){
+  const logoutMsg = state.reports.length ? t("logoutConfirm") : t("logoutConfirmSimple");
+  if(!confirm(logoutMsg)) return false;
+  const p = state.patrol;
+  if(p.sessionId){
+    // Total patrol time = logout minus login, minus every pause (including
+    // one that's still active right at the moment of logout).
+    const activePauseMs = p.paused ? (Date.now() - p.lastPauseAt) : 0;
+    const totalPausedMs = p.pausedMs + activePauseMs;
+    const totalDurationMs = Math.max(0, Date.now() - p.startedAt - totalPausedMs);
+    callScript("log-patrol-event", {
+      officer: state.officer, sessionId: p.sessionId, event:"Logout", timestamp: new Date().toISOString(),
+      totalDurationMs, totalDuration: formatDuration(totalDurationMs),
+      totalPausedMs, totalPaused: formatDuration(totalPausedMs),
+    });
+    toast(totalPausedMs>0
+      ? t("logoutSummaryPaused", formatDuration(totalDurationMs), formatDuration(totalPausedMs))
+      : t("logoutSummary", formatDuration(totalDurationMs)));
+  }
+  state = {screen:"login", lang:state.lang, officer:null, loginError:"", registerError:"", registerNote:"", tower:null, level:null, location:null, activeCategory:null, selectedAssets:[], reportedTags:[], reportedIssues:[], checkingAssets:false, draft:{text:"",media:[]}, reports:[], sending:false, lastSkipped:0, lastSaved:0, patrol:{sessionId:null,startedAt:null,paused:false,lastPauseAt:null,pausedMs:0}, pendingIssues:[], pendingLoading:false, viewingIssue:null, isOnline:state.isOnline, lastQueuedOffline:0, offlineSuccess:false};
+  render();
+  return true;
+}
+
 function bindEvents(){
   const $ = sel => document.querySelector(sel);
   const $$ = sel => document.querySelectorAll(sel);
@@ -1063,30 +1094,7 @@ function bindEvents(){
   if(pauseBtn) pauseBtn.addEventListener("click", togglePatrolPause);
 
   const logoutBtn = $("#btn-logout");
-  if(logoutBtn) logoutBtn.addEventListener("click", ()=>{
-    // Always ask before logging out — a stronger warning if there are
-    // unsubmitted items sitting in this session, a simple yes/no otherwise.
-    const logoutMsg = state.reports.length ? t("logoutConfirm") : t("logoutConfirmSimple");
-    if(!confirm(logoutMsg)) return;
-    const p = state.patrol;
-    if(p.sessionId){
-      // Total patrol time = logout minus login, minus every pause (including
-      // one that's still active right at the moment of logout).
-      const activePauseMs = p.paused ? (Date.now() - p.lastPauseAt) : 0;
-      const totalPausedMs = p.pausedMs + activePauseMs;
-      const totalDurationMs = Math.max(0, Date.now() - p.startedAt - totalPausedMs);
-      callScript("log-patrol-event", {
-        officer: state.officer, sessionId: p.sessionId, event:"Logout", timestamp: new Date().toISOString(),
-        totalDurationMs, totalDuration: formatDuration(totalDurationMs),
-        totalPausedMs, totalPaused: formatDuration(totalPausedMs),
-      });
-      toast(totalPausedMs>0
-        ? t("logoutSummaryPaused", formatDuration(totalDurationMs), formatDuration(totalPausedMs))
-        : t("logoutSummary", formatDuration(totalDurationMs)));
-    }
-    state = {screen:"login", lang:state.lang, officer:null, loginError:"", registerError:"", registerNote:"", tower:null, level:null, location:null, activeCategory:null, selectedAssets:[], reportedTags:[], reportedIssues:[], checkingAssets:false, draft:{text:"",media:[]}, reports:[], sending:false, lastSkipped:0, lastSaved:0, patrol:{sessionId:null,startedAt:null,paused:false,lastPauseAt:null,pausedMs:0}, pendingIssues:[], pendingLoading:false, viewingIssue:null, isOnline:state.isOnline, lastQueuedOffline:0, offlineSuccess:false};
-    render();
-  });
+  if(logoutBtn) logoutBtn.addEventListener("click", confirmAndLogout);
 
   const reviewBtn = $("#btn-review");
   if(reviewBtn) reviewBtn.addEventListener("click", ()=> go("summary"));
@@ -1286,6 +1294,26 @@ function bindEvents(){
 
 render();
 flushOfflineQueue(); // in case there's already a queued patrol from a previous offline session
+
+/* ============================================================
+   PHONE / BROWSER BACK BUTTON — on its own, a back gesture just closes
+   the page instantly with no warning, since this is a single-page app
+   with no real browser history. This traps it instead: while an officer
+   is signed in, pressing back asks the same yes/no logout question as
+   the in-app logout button, and only actually signs out if they confirm.
+   Cancelling keeps them exactly where they were, mid-patrol data intact.
+   ============================================================ */
+history.pushState({fls:true}, "", "");
+window.addEventListener("popstate", ()=>{
+  if(state.officer){
+    // Re-claim a history entry immediately so the page itself doesn't
+    // navigate away while the officer is deciding.
+    history.pushState({fls:true}, "", "");
+    confirmAndLogout();
+  }
+  // Not signed in (still on the login screen) — nothing to protect,
+  // let the back gesture behave normally.
+});
 </script>
 </body>
 </html>
