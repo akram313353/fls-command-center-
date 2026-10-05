@@ -163,6 +163,11 @@
   textarea{width:100%;min-height:100px;padding:13px 14px;border-radius:var(--radius-sm);border:1px solid var(--line);font-size:14px;resize:vertical;outline:none;transition:.15s;line-height:1.5;color:var(--ink);}
   textarea:focus{border-color:var(--brass);box-shadow:0 0 0 3px var(--brass-tint);}
 
+  .risk-section-label{display:block;font-size:12px;font-weight:600;color:var(--ink);margin:16px 0 8px;}
+  .risk-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .risk-btn{border:2px solid var(--risk);background:var(--risk-tint);color:var(--risk);border-radius:10px;padding:11px 6px;font-size:13.5px;font-weight:700;cursor:pointer;transition:.15s;}
+  .risk-btn.selected{background:var(--risk);color:#fff;box-shadow:0 0 0 3px var(--risk-tint);}
+  .risk-badge{display:inline-block;color:#fff;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:10px;margin-inline-start:6px;vertical-align:middle;letter-spacing:.02em;}
   .chips-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
   .chip{background:var(--brass-tint);color:var(--brass-dark);font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:20px;letter-spacing:.02em;font-family:'Playfair Display',serif;}
   html[dir="rtl"] .chip{font-family:'Cairo',serif;}
@@ -251,7 +256,29 @@
 const TOWERS = [
   { id:"t1", en:"Tower 1", ar:"البرج 1", floors:26 },
   { id:"t2", en:"Tower 2", ar:"البرج 2", floors:12 },
+  // Level 0 (ground floor) is a single area, not a tower: no floor grid, no
+  // location step, only the categories listed here, and every issue carries
+  // a risk level (see RISK_LEVELS)
+  { id:"l0", en:"Level 0", ar:"الطابق 0", floors:1, singleLevel:true, level:0,
+    categories:["emergency-light","other"], riskScale:true },
 ];
+// Where a single-level area's issues are filed, since it skips the location step
+const AREA_LOCATION = { id:"general", en:"General", ar:"عام" };
+/* Risk scale shown on Level 0 issues. `color` is the button / badge colour in
+   the app; the Apps Script uses the same colours to highlight the
+   "Risk Level" cell in the spreadsheet (apps-script/risk-level.gs). */
+const RISK_LEVELS = [
+  { id:"Regular", en:"Regular", ar:"عادي",  color:"#2e7d32", tint:"#e3f1e4" },
+  { id:"Medium",  en:"Medium",  ar:"متوسط", color:"#b26a00", tint:"#fdf0d5" },
+  { id:"Risky",   en:"Risky",   ar:"خطير",  color:"#c62828", tint:"#fbe4e2" },
+];
+const DEFAULT_RISK = "Regular";
+function riskOf(id){ return RISK_LEVELS.find(r=>r.id===id) || null; }
+function riskBadge(id){
+  const r = riskOf(id); if(!r) return "";
+  return `<span class="risk-badge" style="background:${r.color}">${tr(r)}</span>`;
+}
+function categoriesFor(tower){ return tower && tower.categories ? CATEGORIES.filter(c=>tower.categories.includes(c.id)) : CATEGORIES; }
 const LOCATIONS = [
   { id:"corridor", en:"Corridor", ar:"الممر" },
   { id:"guest-elevator", en:"Guest Lift", ar:"مصعد النزلاء" },
@@ -471,6 +498,7 @@ const STR = {
     changeFloor:"switch level anytime from the trail above",
     descLabel:"Describe the issue", descPlaceholder:"e.g. Emergency light not illuminating, unit appears to have a dead battery.",
     photoLabel:"Photos", addPhoto:"Add photo",
+    riskLabel:"How risky is it?", areaMeta:"Emergency Light & Other Issue",
     cancel:"Cancel", submitIssue:"Submit Issue", missingFields:"Add a short description or at least one photo before submitting.",
     issueLogged:"Issue logged",
     assetsTitle:"Select Affected Units", assetsSub:"Choose one or more units that have a problem, then continue to describe it and add photos.",
@@ -530,6 +558,7 @@ const STR = {
     changeFloor:"يمكنك تغيير الطابق في أي وقت من المسار أعلاه",
     descLabel:"صف المشكلة", descPlaceholder:"مثال: إضاءة الطوارئ لا تعمل، يبدو أن البطارية تالفة.",
     photoLabel:"الصور", addPhoto:"إضافة صورة",
+    riskLabel:"ما مدى خطورة الوضع؟", areaMeta:"إضاءة الطوارئ ومشكلة أخرى",
     cancel:"إلغاء", submitIssue:"إرسال المشكلة", missingFields:"أضف وصفًا مختصرًا أو صورة واحدة على الأقل قبل الإرسال.",
     issueLogged:"تم تسجيل المشكلة",
     assetsTitle:"اختر الوحدات المتضررة", assetsSub:"اختر وحدة واحدة أو أكثر بها مشكلة، ثم تابع لوصفها وإضافة الصور.",
@@ -611,7 +640,7 @@ let state = {
   screen: "login", lang: "en", officer: null, loginError:"", registerError:"", registerNote:"",
   tower:null, level:null, location:null, activeCategory:null,
   selectedAssets:[], reportedTags:[], reportedIssues:[], checkingAssets:false,
-  draft:{text:"", media:[]}, reports:[], sending:false, lastSkipped:0, lastSaved:0,
+  draft:{text:"", media:[], risk:DEFAULT_RISK}, reports:[], sending:false, lastSkipped:0, lastSaved:0,
   patrol:{ sessionId:null, startedAt:null, paused:false, lastPauseAt:null, pausedMs:0 },
   pendingIssues:[], pendingLoading:false, viewingIssue:null,
   isOnline: (typeof navigator!=="undefined" ? navigator.onLine : true),
@@ -633,10 +662,10 @@ function goBack(){
     case "tower": go("login"); break;
     case "level": go("tower"); break;
     case "location": go("level"); break;
-    case "category": go("location"); break;
+    case "category": go(state.tower.singleLevel ? "tower" : "location"); break;
     case "assets": go("category"); break;
     case "form": go(getAssets(state.tower.id,state.level,state.activeCategory) ? "assets" : "category"); break;
-    case "summary": go(state.location?"category":state.level?"location":state.tower?"level":"tower"); break;
+    case "summary": go(state.location?"category":state.tower&&state.tower.singleLevel?"tower":state.level?"location":state.tower?"level":"tower"); break;
     default: break;
   }
 }
@@ -645,13 +674,16 @@ function goBack(){
 // the Level grid each time.
 async function selectLevel(n){
   state.level = n;
-  go("location");
+  // a single-level area has no location step — straight to its categories
+  const next = state.tower.singleLevel ? "category" : "location";
+  if(state.tower.singleLevel) state.location = AREA_LOCATION;
+  go(next);
   state.pendingLoading = true; state.pendingIssues = [];
-  if(state.screen==="location") render();
+  if(state.screen===next) render();
   const { ok, data } = await callScript("pending-issues", { tower: state.tower.en, floor: state.level });
   state.pendingLoading = false;
   state.pendingIssues = (ok && data.pending) ? data.pending : [];
-  if(state.screen==="location") render();
+  if(state.screen===next) render();
 }
 /* ============================================================
    RENDER
@@ -699,6 +731,10 @@ function reviewFab(){
 }
 function crumbTrail({tower, floor, location}={}){
   const parts = [];
+  if(state.tower && state.tower.singleLevel){
+    parts.push(location==="current" ? `<b>${tr(state.tower)}</b>` : `<button class="crumb-link" data-jump="area">${tr(state.tower)}</button>`);
+    return `<div class="crumbs">${parts.join("")}</div>`;
+  }
   if(state.tower) parts.push(tower==="current" ? `<b>${tr(state.tower)}</b>` : `<button class="crumb-link" data-jump="tower">${tr(state.tower)}</button>`);
   if(state.level!=null && floor!==undefined) parts.push(floor==="current" ? `<b>${t("floorLabel",state.level)}</b>` : `<button class="crumb-link" data-jump="level">${t("floorLabel",state.level)}</button>`);
   if(state.location && location!==undefined) parts.push(location==="current" ? `<b>${tr(state.location)}</b>` : `<button class="crumb-link" data-jump="location">${tr(state.location)}</button>`);
@@ -730,7 +766,7 @@ function renderTower(){
     ${TOWERS.map(tw=>`
       <button class="tower-card" data-tower="${tw.id}">
         <div class="ic">${icon("tower")}</div>
-        <div><div class="name">${tr(tw)}</div><div class="meta">${t("towerFloors",tw.floors)}</div></div>
+        <div><div class="name">${tr(tw)}</div><div class="meta">${tw.singleLevel ? t("areaMeta") : t("towerFloors",tw.floors)}</div></div>
         <div class="chev">${icon("chevron")}</div>
       </button>`).join("")}
   </main>` + reviewFab();
@@ -766,7 +802,7 @@ function renderPendingPanel(){
       return `
       <div class="pending-item">
         <div class="pending-item-body" data-view-issue="${p.issueId}">
-          <div class="pending-item-cat">${cat?tr(cat):p.category}${p.location?` · ${p.location}`:""}${p.assets?` · ${p.assets}`:""}</div>
+          <div class="pending-item-cat">${cat?tr(cat):p.category}${p.location?` · ${p.location}`:""}${p.assets?` · ${p.assets}`:""}${riskBadge(p.risk)}</div>
           ${p.text?`<div class="pending-item-text">${escapeHtml(p.text)}</div>`:""}
           ${checkedNote?`<div class="pending-item-checked">${checkedNote}</div>`:""}
           <div class="pending-item-hint">${t("viewDetails")}</div>
@@ -807,10 +843,11 @@ function renderCategory(){
   return topbar(3,4) + `
   <main>
     ${crumbTrail({tower:"link", floor:"link", location:"current"})}
-    <div class="hint-line">${t("changeFloor")}</div>
+    ${state.tower.singleLevel ? "" : `<div class="hint-line">${t("changeFloor")}</div>`}
     <div class="page-head"><div class="eyebrow">${t("stepOf",4,4)}</div><h1>${t("categoryTitle")}</h1><p>${t("categorySub")}</p></div>
+    ${state.tower.singleLevel ? renderPendingPanel() : ""}
     <div class="grid">
-      ${CATEGORIES.map(c=>`
+      ${categoriesFor(state.tower).map(c=>`
         <button class="tile" data-category="${c.id}">
           ${counts[c.id]?`<div class="badge">${counts[c.id]}</div>`:""}
           <div class="ic">${icon(c.icon)}</div><div><div class="name">${tr(c)}</div></div>
@@ -900,10 +937,15 @@ function renderForm(){
     ${crumbTrail({tower:"link", floor:"link", location:"link"})}
     <div class="form-card">
       <div class="cat-head"><div class="ic">${icon(cat.icon)}</div>
-        <div><h3>${tr(cat)}</h3><div class="loc">${tr(state.tower)} — ${t("floorLabel",state.level)} — ${tr(state.location)}</div></div></div>
+        <div><h3>${tr(cat)}</h3><div class="loc">${state.tower.singleLevel ? tr(state.tower) : `${tr(state.tower)} — ${t("floorLabel",state.level)} — ${tr(state.location)}`}</div></div></div>
       ${state.selectedAssets.length?`<div class="chips-row">${state.selectedAssets.map(a=>`<span class="chip">${a}</span>`).join("")}</div>`:""}
       <div class="field" style="margin-bottom:0"><label>${t("descLabel")}</label>
         <textarea id="in-desc" placeholder="${t("descPlaceholder")}">${state.draft.text}</textarea></div>
+      ${state.tower.riskScale ? `
+      <label class="risk-section-label">${t("riskLabel")}</label>
+      <div class="risk-row">
+        ${RISK_LEVELS.map(r=>`<button type="button" class="risk-btn ${state.draft.risk===r.id?'selected':''}" data-risk="${r.id}" style="--risk:${r.color};--risk-tint:${r.tint}">${tr(r)}</button>`).join("")}
+      </div>` : ""}
       <label class="photo-section-label">${t("photoLabel")}</label>
       <div class="photo-grid">
         ${state.draft.media.map((m,i)=> m.kind==="video"
@@ -926,7 +968,7 @@ function renderForm(){
 function renderSummary(){
   const groups = {};
   state.reports.forEach(r=>{
-    const key = `${tr(r.towerObj)} — ${t("floorLabel",r.level)} — ${tr(r.locationObj)}`;
+    const key = r.towerObj.singleLevel ? tr(r.towerObj) : `${tr(r.towerObj)} — ${t("floorLabel",r.level)} — ${tr(r.locationObj)}`;
     (groups[key] = groups[key]||[]).push(r);
   });
   const keys = Object.keys(groups);
@@ -947,7 +989,7 @@ function renderSummary(){
         <div class="summary-item">
           ${firstThumb}
           <div class="body">
-            <div class="cat">${tr(cat)}${r.assets&&r.assets.length?` · ${r.assets.join(", ")}`:""}</div>
+            <div class="cat">${tr(cat)}${r.assets&&r.assets.length?` · ${r.assets.join(", ")}`:""}${riskBadge(r.risk)}</div>
             <div class="desc">${r.text? escapeHtml(r.text) : `<em style="color:var(--muted)">${t("noDescription")}</em>`}</div>
             ${media.length>1?`<div class="photo-mini-row">${shown.slice(1).map(m=>m.kind==="video"?`<div class="photo-mini video-mini">${icon("video",'style="width:13px;height:13px"')}</div>`:`<img class="photo-mini" src="${m.url}" />`).join("")}${extra>0?`<div class="photo-mini-more">${t("morePhotos",extra)}</div>`:""}</div>`:""}
           </div>
@@ -1002,7 +1044,7 @@ function renderIssueDetailModal(){
   <div class="modal-backdrop" id="issue-modal-backdrop">
     <div class="modal-card">
       <div class="modal-head">
-        <h3>${cat?tr(cat):(iss.category||"")}</h3>
+        <h3>${cat?tr(cat):(iss.category||"")}${riskBadge(iss.risk)}</h3>
         <button class="icon-btn" id="btn-close-issue-modal" title="${t('close')}">${icon("x")}</button>
       </div>
       <div class="modal-body">
@@ -1060,7 +1102,7 @@ function confirmAndLogout(){
       ? t("logoutSummaryPaused", formatDuration(totalDurationMs), formatDuration(totalPausedMs))
       : t("logoutSummary", formatDuration(totalDurationMs)));
   }
-  state = {screen:"login", lang:state.lang, officer:null, loginError:"", registerError:"", registerNote:"", tower:null, level:null, location:null, activeCategory:null, selectedAssets:[], reportedTags:[], reportedIssues:[], checkingAssets:false, draft:{text:"",media:[]}, reports:[], sending:false, lastSkipped:0, lastSaved:0, patrol:{sessionId:null,startedAt:null,paused:false,lastPauseAt:null,pausedMs:0}, pendingIssues:[], pendingLoading:false, viewingIssue:null, isOnline:state.isOnline, lastQueuedOffline:0, offlineSuccess:false};
+  state = {screen:"login", lang:state.lang, officer:null, loginError:"", registerError:"", registerNote:"", tower:null, level:null, location:null, activeCategory:null, selectedAssets:[], reportedTags:[], reportedIssues:[], checkingAssets:false, draft:{text:"",media:[],risk:DEFAULT_RISK}, reports:[], sending:false, lastSkipped:0, lastSaved:0, patrol:{sessionId:null,startedAt:null,paused:false,lastPauseAt:null,pausedMs:0}, pendingIssues:[], pendingLoading:false, viewingIssue:null, isOnline:state.isOnline, lastQueuedOffline:0, offlineSuccess:false};
   render();
   return true;
 }
@@ -1136,7 +1178,7 @@ function bindEvents(){
 
   $$("[data-jump]").forEach(b=>b.addEventListener("click", ()=>{
     const j = b.dataset.jump;
-    if(j==="tower") go("tower"); if(j==="level") go("level"); if(j==="location") go("location");
+    if(j==="tower") go("tower"); if(j==="level") go("level"); if(j==="location") go("location"); if(j==="area") go("category");
   }));
 
   // Issue detail modal — tapping a pending/flagged item's body (not its
@@ -1156,7 +1198,7 @@ function bindEvents(){
     $$("[data-tower]").forEach(b=>b.addEventListener("click", ()=>{
       state.tower = TOWERS.find(x=>x.id===b.dataset.tower);
       if(!state.patrol.sessionId) startPatrolSession(); // first tower pick of this patrol starts the clock
-      go("level");
+      if(state.tower.singleLevel) selectLevel(state.tower.level); else go("level");
     }));
   }
   if(state.screen==="level"){
@@ -1170,7 +1212,7 @@ function bindEvents(){
   if(state.screen==="category"){
     $$("[data-category]").forEach(b=>b.addEventListener("click", async ()=>{
       state.activeCategory = b.dataset.category;
-      state.draft = {text:"", media:[]};
+      state.draft = {text:"", media:[], risk:DEFAULT_RISK};
       state.selectedAssets = [];
       state.reportedTags = []; state.reportedIssues = [];
       const assets = getAssets(state.tower.id, state.level, state.activeCategory);
@@ -1204,6 +1246,7 @@ function bindEvents(){
   if(state.screen==="form"){
     $("#btn-cancel-form").addEventListener("click", ()=>go("category"));
     $("#in-desc").addEventListener("input", e=> state.draft.text = e.target.value);
+    $$("[data-risk]").forEach(b=>b.addEventListener("click", ()=>{ state.draft.risk = b.dataset.risk; render(); }));
 
     // camera photo — resized + re-encoded before it ever becomes base64
     $("#in-photo").addEventListener("change", async e=>{
@@ -1244,9 +1287,10 @@ function bindEvents(){
         locationId: state.location.id, locationObj: state.location,
         category: cat.id, assets:[...state.selectedAssets],
         text: state.draft.text.trim(), media:[...state.draft.media],
+        risk: state.tower.riskScale ? (state.draft.risk || DEFAULT_RISK) : null,
       });
       toast(t("issueLogged"));
-      state.draft = {text:"", media:[]}; state.selectedAssets = [];
+      state.draft = {text:"", media:[], risk:DEFAULT_RISK}; state.selectedAssets = [];
       go("category");
     });
   }
@@ -1255,7 +1299,7 @@ function bindEvents(){
     const finalBtn = $("#btn-final-submit");
     if(finalBtn) finalBtn.addEventListener("click", async ()=>{
       if(!confirm(t("finalConfirm", state.reports.length))) return;
-      const entries = state.reports.map(r=>({ tower:r.towerObj.en, level:r.level, location:r.locationId, category:r.category, assets:r.assets, text:r.text, photos:r.media.map(m=>m.url) }));
+      const entries = state.reports.map(r=>({ tower:r.towerObj.en, level:r.level, location:r.locationId, category:r.category, assets:r.assets, text:r.text, photos:r.media.map(m=>m.url), ...(r.risk ? { risk:r.risk } : {}) }));
 
       if(!navigator.onLine){
         queueOffline(state.officer, entries);
@@ -1284,7 +1328,7 @@ function bindEvents(){
   if(state.screen==="success"){
     $("#btn-new-patrol").addEventListener("click", ()=>{
       state.tower=null; state.level=null; state.location=null; state.activeCategory=null;
-      state.selectedAssets=[]; state.reportedTags=[]; state.draft={text:"",media:[]}; state.reports=[]; state.lastSkipped=0; state.lastSaved=0;
+      state.selectedAssets=[]; state.reportedTags=[]; state.draft={text:"",media:[],risk:DEFAULT_RISK}; state.reports=[]; state.lastSkipped=0; state.lastSaved=0;
       state.patrol={sessionId:null,startedAt:null,paused:false,lastPauseAt:null,pausedMs:0};
       state.pendingIssues=[]; state.pendingLoading=false;
       go("tower");
