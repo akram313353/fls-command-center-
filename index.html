@@ -383,9 +383,9 @@ async function callScriptGet(params){
 const OFFLINE_QUEUE_KEY = "fls_offline_queue";
 function getOfflineQueue(){ try{ return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || "[]"); }catch(e){ return []; } }
 function setOfflineQueue(q){ try{ localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(q)); }catch(e){ /* storage unavailable — nothing more we can do */ } }
-function queueOffline(officer, entries){
+function queueOffline(officer, entries, patrolInfo={}){
   const q = getOfflineQueue();
-  q.push({ officer, entries, queuedAt: new Date().toISOString() });
+  q.push({ officer, entries, patrolInfo, queuedAt: new Date().toISOString() });
   setOfflineQueue(q);
 }
 let flushingOffline = false;
@@ -397,7 +397,7 @@ async function flushOfflineQueue(){
   const remaining = [];
   let flushed = 0;
   for(const item of queue){
-    const { ok } = await callScript("submit-patrol", { officer:item.officer, entries:item.entries });
+    const { ok } = await callScript("submit-patrol", { officer:item.officer, entries:item.entries, ...(item.patrolInfo||{}) });
     if(ok) flushed++; else remaining.push(item);
   }
   setOfflineQueue(remaining);
@@ -1124,21 +1124,41 @@ function renderIssueDetailModal(){
    Returns true if the officer confirmed and was logged out, false if
    they cancelled (and are still signed in).
    ============================================================ */
+// Total patrol time = now minus start, minus every pause (including one
+// that's still active right now).
+function patrolTotals(){
+  const p = state.patrol;
+  const activePauseMs = p.paused ? (Date.now() - p.lastPauseAt) : 0;
+  const totalPausedMs = p.pausedMs + activePauseMs;
+  const totalDurationMs = Math.max(0, Date.now() - p.startedAt - totalPausedMs);
+  return { totalDurationMs, totalDuration: formatDuration(totalDurationMs), totalPausedMs, totalPaused: formatDuration(totalPausedMs) };
+}
+// Logs the end of the current patrol with its total time, then clears it so
+// the same patrol is never ended twice. Every way a patrol can finish goes
+// through here: sending it ("Submit"), logging out ("Logout"), or closing
+// the page ("Closed", sent as a beacon since the page is going away).
+function endPatrol(event, { beacon=false }={}){
+  const p = state.patrol;
+  if(!p.sessionId) return null;
+  const totals = patrolTotals();
+  const payload = { action:"log-patrol-event", officer: state.officer, sessionId: p.sessionId, event, timestamp: new Date().toISOString(), ...totals };
+  if(beacon && navigator.sendBeacon){
+    navigator.sendBeacon(GOOGLE_SCRIPT_URL, new Blob([JSON.stringify(payload)], { type:"text/plain;charset=utf-8" }));
+  } else {
+    const { action, ...rest } = payload;
+    callScript(action, rest);
+  }
+  state.patrol = { sessionId:null, startedAt:null, paused:false, lastPauseAt:null, pausedMs:0 };
+  return totals;
+}
+window.addEventListener("pagehide", ()=>{ if(state.officer) endPatrol("Closed", { beacon:true }); });
+
 function confirmAndLogout(){
   const logoutMsg = state.reports.length ? t("logoutConfirm") : t("logoutConfirmSimple");
   if(!confirm(logoutMsg)) return false;
-  const p = state.patrol;
-  if(p.sessionId){
-    // Total patrol time = logout minus login, minus every pause (including
-    // one that's still active right at the moment of logout).
-    const activePauseMs = p.paused ? (Date.now() - p.lastPauseAt) : 0;
-    const totalPausedMs = p.pausedMs + activePauseMs;
-    const totalDurationMs = Math.max(0, Date.now() - p.startedAt - totalPausedMs);
-    callScript("log-patrol-event", {
-      officer: state.officer, sessionId: p.sessionId, event:"Logout", timestamp: new Date().toISOString(),
-      totalDurationMs, totalDuration: formatDuration(totalDurationMs),
-      totalPausedMs, totalPaused: formatDuration(totalPausedMs),
-    });
+  const totals = endPatrol("Logout");
+  if(totals){
+    const { totalDurationMs, totalPausedMs } = totals;
     toast(totalPausedMs>0
       ? t("logoutSummaryPaused", formatDuration(totalDurationMs), formatDuration(totalPausedMs))
       : t("logoutSummary", formatDuration(totalDurationMs)));
@@ -1347,25 +1367,31 @@ function bindEvents(){
     const finalBtn = $("#btn-final-submit");
     if(finalBtn) finalBtn.addEventListener("click", async ()=>{
       if(!confirm(t("finalConfirm", state.reports.length))) return;
+      // sending the round ends this patrol; its total time goes with it
+      const totals = state.patrol.sessionId ? patrolTotals() : null;
+      const patrolInfo = totals ? { sessionId: state.patrol.sessionId, patrolDuration: totals.totalDuration, patrolDurationMs: totals.totalDurationMs, patrolPaused: totals.totalPaused } : {};
       const entries = state.reports.map(r=>({ tower:r.towerObj.en, level:r.level, location:r.locationId, category:r.category, assets:r.assets, text:r.text, photos:r.media.map(m=>m.url), ...(r.risk ? { risk:r.risk } : {}) }));
 
       if(!navigator.onLine){
-        queueOffline(state.officer, entries);
+        queueOffline(state.officer, entries, patrolInfo);
+        endPatrol("Submit");
         state.lastSaved = entries.length; state.lastSkipped = 0;
         state.reports = []; state.offlineSuccess = true; go("success");
         return;
       }
 
       state.sending = true; render();
-      const { ok, data } = await callScript("submit-patrol", { officer: state.officer, entries });
+      const { ok, data } = await callScript("submit-patrol", { officer: state.officer, entries, ...patrolInfo });
       state.sending = false;
       if(ok){
         state.lastSkipped = (data.skipped||[]).length;
         state.lastSaved = (typeof data.saved === "number") ? data.saved : entries.length;
+        endPatrol("Submit");
         state.reports = []; state.offlineSuccess = false; go("success");
       } else if(!navigator.onLine){
         // connection dropped mid-request — don't lose the work, queue it instead
-        queueOffline(state.officer, entries);
+        queueOffline(state.officer, entries, patrolInfo);
+        endPatrol("Submit");
         state.lastSaved = entries.length; state.lastSkipped = 0;
         state.reports = []; state.offlineSuccess = true; go("success");
       } else {
