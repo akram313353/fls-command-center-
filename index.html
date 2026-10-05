@@ -256,15 +256,15 @@
 const TOWERS = [
   { id:"t1", en:"Tower 1", ar:"البرج 1", floors:26 },
   { id:"t2", en:"Tower 2", ar:"البرج 2", floors:12 },
-  // Level 0 (ground floor) is a single area, not a tower: no floor grid, no
-  // location step, only the categories listed here, and every issue carries
-  // a risk level (see RISK_LEVELS)
-  { id:"l0", en:"Level 0", ar:"الطابق 0", floors:1, singleLevel:true, level:0,
+  // Level -1 is a single area, not a tower: no floor grid, no location
+  // step, only the categories listed here, and every issue carries a risk
+  // level (see RISK_LEVELS)
+  { id:"lm1", en:"Level -1", ar:"الطابق -1", floors:1, singleLevel:true, level:-1,
     categories:["emergency-light","other"], riskScale:true },
 ];
 // Where a single-level area's issues are filed, since it skips the location step
 const AREA_LOCATION = { id:"general", en:"General", ar:"عام" };
-/* Risk scale shown on Level 0 issues. `color` is the button / badge colour in
+/* Risk scale shown on Level -1 issues. `color` is the button / badge colour in
    the app; the Apps Script uses the same colours to highlight the
    "Risk Level" cell in the spreadsheet (apps-script/risk-level.gs). */
 const RISK_LEVELS = [

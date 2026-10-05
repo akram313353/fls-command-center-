@@ -1,5 +1,5 @@
 /* ============================================================
-   RISK LEVEL — Level 0 issues come in with entry.risk set to
+   RISK LEVEL — Level -1 issues come in with entry.risk set to
    "Regular", "Medium" or "Risky". Paste this file into the Apps Script
    project behind the FLS spreadsheet, then in the "submit-patrol"
    handler, right after each issue row is appended, call:
@@ -37,6 +37,6 @@ function writeRiskLevel_(sheet, row, risk) {
       .setHorizontalAlignment("center");
 }
 
-/* Optional: so the app can show the risk badge on open Level 0 issues, add
+/* Optional: so the app can show the risk badge on open Level -1 issues, add
    `risk` to each object the "pending-issues" and "check-duplicates" handlers
    return, e.g. risk: row[riskColumn_(sheet) - 1]. */
