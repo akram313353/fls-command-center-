@@ -277,7 +277,9 @@ function locationsFor(tower){
 // signed-in officers.
 async function loadAreaLocations(tower){
   if(!tower.remoteLocations || state.areaLocations[tower.id]) return;
-  const { ok, data } = await callScript("get-locations", { area: tower.en, id: state.officer, password: state.password });
+  // older scripts (before sign-in tokens) want the ID + password instead
+  const creds = state.token ? {} : { id: state.officer, password: state.legacyPassword };
+  const { ok, data } = await callScript("get-locations", { area: tower.en, ...creds });
   if(ok && Array.isArray(data.locations)){
     state.areaLocations[tower.id] = data.locations
       .map(n=>String(n).trim()).filter(Boolean)
@@ -356,7 +358,9 @@ async function callScript(action, payload){
       // text/plain avoids a CORS preflight that Apps Script web apps don't handle;
       // the script itself still JSON.parses the body normally.
       headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action, ...payload }),
+      // every request carries the sign-in token the script handed out at
+      // login, so the script only answers signed-in officers
+      body: JSON.stringify({ action, ...payload, token: state.token }),
     });
     const data = await res.json().catch(()=>({}));
     return { ok: res.ok && data.ok !== false, data };
@@ -390,7 +394,8 @@ function queueOffline(officer, entries, patrolInfo={}){
 }
 let flushingOffline = false;
 async function flushOfflineQueue(){
-  if(flushingOffline || !navigator.onLine) return;
+  // the script needs a signed-in officer, so queued patrols wait for sign-in
+  if(flushingOffline || !navigator.onLine || !state.officer) return;
   const queue = getOfflineQueue();
   if(!queue.length) return;
   flushingOffline = true;
@@ -658,7 +663,7 @@ const COLUMN_MARK = `<svg viewBox="0 0 40 40" fill="none" stroke="currentColor" 
    ============================================================ */
 let state = {
   screen: "login", lang: "en", officer: null, loginError:"", registerError:"", registerNote:"",
-  tower:null, level:null, location:null, activeCategory:null, password:null, areaLocations:{}, locationFilter:"",
+  tower:null, level:null, location:null, activeCategory:null, token:null, areaLocations:{}, locationFilter:"",
   selectedAssets:[], reportedTags:[], reportedIssues:[], checkingAssets:false,
   draft:{text:"", media:[], risk:DEFAULT_RISK}, reports:[], sending:false, lastSkipped:0, lastSaved:0,
   patrol:{ sessionId:null, startedAt:null, paused:false, lastPauseAt:null, pausedMs:0 },
@@ -1141,7 +1146,7 @@ function endPatrol(event, { beacon=false }={}){
   const p = state.patrol;
   if(!p.sessionId) return null;
   const totals = patrolTotals();
-  const payload = { action:"log-patrol-event", officer: state.officer, sessionId: p.sessionId, event, timestamp: new Date().toISOString(), ...totals };
+  const payload = { action:"log-patrol-event", token: state.token, officer: state.officer, sessionId: p.sessionId, event, timestamp: new Date().toISOString(), ...totals };
   if(beacon && navigator.sendBeacon){
     navigator.sendBeacon(GOOGLE_SCRIPT_URL, new Blob([JSON.stringify(payload)], { type:"text/plain;charset=utf-8" }));
   } else {
@@ -1185,7 +1190,7 @@ function bindEvents(){
       const id = $("#in-id").value.trim(); const pw = $("#in-pw").value;
       const btn = $("#btn-login-submit"); btn.disabled = true; btn.innerHTML = `<span class="spinner"></span>`;
       const { ok, data } = await callScript("login", { id, password: pw });
-      if(ok){ state.officer = id; state.password = pw; state.loginError=""; state.registerNote=""; go("tower"); }
+      if(ok){ state.officer = id; state.token = data.token || null; state.legacyPassword = state.token ? null : pw; state.loginError=""; state.registerNote=""; go("tower"); flushOfflineQueue(); }
       else { state.loginError = (data && data.error) || t("loginErrorMsg"); render(); $("#in-pw").focus(); }
     });
   }
@@ -1411,7 +1416,7 @@ function bindEvents(){
 }
 
 render();
-flushOfflineQueue(); // in case there's already a queued patrol from a previous offline session
+// (a patrol queued in a previous offline session is sent right after sign-in)
 
 /* ============================================================
    PHONE / BROWSER BACK BUTTON — on its own, a back gesture just closes
