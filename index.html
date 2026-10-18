@@ -264,6 +264,18 @@ const TOWERS = [
   // never appear in the public code.
   { id:"lm1", en:"Level -1", ar:"الطابق -1", floors:1, singleLevel:true, level:-1, remoteLocations:true,
     categories:["emergency-light","other"], riskScale:true },
+  // Level 0, Level 1, Garden, Gate 2 and Gate 3 work like Level -1: tap the area, pick a place
+  // (loaded from the "Places" tab), and go straight to the form with "Other Issue".
+  { id:"l0", en:"Level 0", ar:"الطابق 0", floors:1, singleLevel:true, level:0, remoteLocations:true,
+    categories:["other"], riskScale:true, meta:{ en:"Other Issue", ar:"مشكلة أخرى" } },
+  { id:"l1", en:"Level 1", ar:"الطابق 1", floors:1, singleLevel:true, level:1, remoteLocations:true,
+    categories:["other"], riskScale:true, meta:{ en:"Other Issue", ar:"مشكلة أخرى" } },
+  { id:"gd", en:"Garden", ar:"الحديقة", floors:1, singleLevel:true, level:0, remoteLocations:true,
+    categories:["other"], riskScale:true, meta:{ en:"Other Issue", ar:"مشكلة أخرى" } },
+  { id:"g2", en:"Gate 2", ar:"البوابة 2", floors:1, singleLevel:true, level:0, remoteLocations:true,
+    categories:["other"], riskScale:false, meta:{ en:"Other Issue", ar:"مشكلة أخرى" } },
+  { id:"g3", en:"Gate 3", ar:"البوابة 3", floors:1, singleLevel:true, level:0, remoteLocations:true,
+    categories:["other"], riskScale:false, meta:{ en:"Other Issue", ar:"مشكلة أخرى" } },
 ];
 // Fallback when an area's place list can't be loaded from the spreadsheet
 const AREA_LOCATION = { id:"general", en:"General", ar:"عام" };
@@ -689,7 +701,7 @@ function goBack(){
     case "location": go(state.tower.singleLevel ? "tower" : "level"); break;
     case "category": go("location"); break;
     case "assets": go("category"); break;
-    case "form": go(getAssets(state.tower.id,state.level,state.activeCategory) ? "assets" : "category"); break;
+    case "form": go(getAssets(state.tower.id,state.level,state.activeCategory) ? "assets" : categoriesFor(state.tower).length===1 ? "location" : "category"); break;
     case "summary": go(state.location?"category":state.level!=null?"location":state.tower?"level":"tower"); break;
     default: break;
   }
@@ -793,14 +805,14 @@ function renderTower(){
     ${TOWERS.map(tw=>`
       <button class="tower-card" data-tower="${tw.id}">
         <div class="ic">${icon("tower")}</div>
-        <div><div class="name">${tr(tw)}</div><div class="meta">${tw.singleLevel ? t("areaMeta") : t("towerFloors",tw.floors)}</div></div>
+        <div><div class="name">${tr(tw)}</div><div class="meta">${tw.singleLevel ? (tw.meta ? tr(tw.meta) : t("areaMeta")) : t("towerFloors",tw.floors-2)}</div></div>
         <div class="chev">${icon("chevron")}</div>
       </button>`).join("")}
   </main>` + reviewFab();
 }
 
 function renderLevel(){
-  const floors = Array.from({length: state.tower.floors}, (_,i)=>i+1);
+  const floors = Array.from({length: state.tower.floors-2}, (_,i)=>i+3);
   return topbar(1,4) + `
   <main>
     ${crumbTrail({tower:"current"})}
@@ -1271,7 +1283,11 @@ function bindEvents(){
     $$("[data-level]").forEach(b=>b.addEventListener("click", ()=> selectLevel(Number(b.dataset.level))));
   }
   if(state.screen==="location"){
-    $$("[data-location]").forEach(b=>b.addEventListener("click", ()=>{ state.location = locationsFor(state.tower).find(x=>x.id===b.dataset.location); go("category"); }));
+    $$("[data-location]").forEach(b=>b.addEventListener("click", ()=>{ state.location = locationsFor(state.tower).find(x=>x.id===b.dataset.location);
+      const cats = categoriesFor(state.tower);
+      if(cats.length===1){ state.activeCategory = cats[0].id; state.draft = {text:"", media:[], risk:DEFAULT_RISK}; state.selectedAssets = []; state.reportedTags = []; state.reportedIssues = []; go("form"); }
+      else go("category");
+    }));
     // filters in place (no re-render) so the search box keeps focus
     const placeFilter = $("#in-place-filter");
     if(placeFilter) placeFilter.addEventListener("input", e=>{
@@ -1317,7 +1333,7 @@ function bindEvents(){
     if(cont) cont.addEventListener("click", ()=>{ if(state.selectedAssets.length) go("form"); });
   }
   if(state.screen==="form"){
-    $("#btn-cancel-form").addEventListener("click", ()=>go("category"));
+    $("#btn-cancel-form").addEventListener("click", ()=>go(categoriesFor(state.tower).length===1 ? "location" : "category"));
     $("#in-desc").addEventListener("input", e=> state.draft.text = e.target.value);
     $$("[data-risk]").forEach(b=>b.addEventListener("click", ()=>{ state.draft.risk = b.dataset.risk; render(); }));
 
@@ -1364,7 +1380,7 @@ function bindEvents(){
       });
       toast(t("issueLogged"));
       state.draft = {text:"", media:[], risk:DEFAULT_RISK}; state.selectedAssets = [];
-      go("category");
+      go(categoriesFor(state.tower).length===1 ? "location" : "category");
     });
   }
   if(state.screen==="summary"){
