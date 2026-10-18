@@ -164,6 +164,7 @@
   textarea{width:100%;min-height:100px;padding:13px 14px;border-radius:var(--radius-sm);border:1px solid var(--line);font-size:14px;resize:vertical;outline:none;transition:.15s;line-height:1.5;color:var(--ink);}
   textarea:focus{border-color:var(--brass);box-shadow:0 0 0 3px var(--brass-tint);}
 
+  .note-original{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.4;}
   .risk-section-label{display:block;font-size:12px;font-weight:600;color:var(--ink);margin:16px 0 8px;}
   .risk-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
   .risk-btn{border:2px solid var(--risk);background:var(--risk-tint);color:var(--risk);border-radius:10px;padding:11px 6px;font-size:13.5px;font-weight:700;cursor:pointer;transition:.15s;}
@@ -284,6 +285,19 @@ function locationsFor(tower){
   const list = state.areaLocations[tower.id];
   return list && list.length ? list : [AREA_LOCATION];
 }
+// A place from the "Places" tab is "English name" or "English name | Arabic name".
+function parsePlace(raw){
+  const o = raw && typeof raw === "object" ? raw : { name: raw };
+  const [en, ar] = String(o.name == null ? "" : o.name).split(" | ").map(x=>x.trim());
+  if(!en) return null;
+  return { id:en, en, ar: (o.ar ? String(o.ar).trim() : ar) || en };
+}
+// Shows a stored place name (always English) in the officer's language.
+function placeLabel(name){
+  if(!name) return "";
+  const known = LOCATIONS.concat(...Object.values(state.areaLocations || {})).find(l=>l.id===name);
+  return known ? tr(known) : name;
+}
 // Fetches the area's place names from the spreadsheet ("get-locations"),
 // once per sign-in. Credentials are sent so the script only answers
 // signed-in officers.
@@ -292,10 +306,10 @@ async function loadAreaLocations(tower){
   // older scripts (before sign-in tokens) want the ID + password instead
   const creds = state.token ? {} : { id: state.officer, password: state.legacyPassword };
   const { ok, data } = await callScript("get-locations", { area: tower.en, ...creds });
-  if(ok && Array.isArray(data.locations)){
-    state.areaLocations[tower.id] = data.locations
-      .map(n=>String(n).trim()).filter(Boolean)
-      .map(n=>({ id:n, en:n, ar:n }));
+  // v6 sheet scripts also send "places" ({ name, ar }); older ones only "locations"
+  const list = ok && data && (Array.isArray(data.places) ? data.places : data.locations);
+  if(Array.isArray(list)){
+    state.areaLocations[tower.id] = list.map(n=>parsePlace(n)).filter(Boolean);
   }
 }
 /* Risk scale shown on Level -1 issues. `color` is the button / badge colour in
@@ -535,7 +549,7 @@ const STR = {
     changeFloor:"switch level anytime from the trail above",
     descLabel:"Describe the issue", descPlaceholder:"e.g. Emergency light not illuminating, unit appears to have a dead battery.",
     photoLabel:"Photos", addPhoto:"Add photo",
-    riskLabel:"How risky is it?", areaMeta:"Emergency Light & Other Issue", searchPlaces:"Search places…",
+    riskLabel:"How risky is it?", originalNote:"Original", areaMeta:"Emergency Light & Other Issue", searchPlaces:"Search places…",
     cancel:"Cancel", submitIssue:"Submit Issue", missingFields:"Add a short description or at least one photo before submitting.",
     issueLogged:"Issue logged",
     assetsTitle:"Select Affected Units", assetsSub:"Choose one or more units that have a problem, then continue to describe it and add photos.",
@@ -595,7 +609,7 @@ const STR = {
     changeFloor:"يمكنك تغيير الطابق في أي وقت من المسار أعلاه",
     descLabel:"صف المشكلة", descPlaceholder:"مثال: إضاءة الطوارئ لا تعمل، يبدو أن البطارية تالفة.",
     photoLabel:"الصور", addPhoto:"إضافة صورة",
-    riskLabel:"ما مدى خطورة الوضع؟", areaMeta:"إضاءة الطوارئ ومشكلة أخرى", searchPlaces:"ابحث عن مكان…",
+    riskLabel:"ما مدى خطورة الوضع؟", originalNote:"النص الأصلي", areaMeta:"إضاءة الطوارئ ومشكلة أخرى", searchPlaces:"ابحث عن مكان…",
     cancel:"إلغاء", submitIssue:"إرسال المشكلة", missingFields:"أضف وصفًا مختصرًا أو صورة واحدة على الأقل قبل الإرسال.",
     issueLogged:"تم تسجيل المشكلة",
     assetsTitle:"اختر الوحدات المتضررة", assetsSub:"اختر وحدة واحدة أو أكثر بها مشكلة، ثم تابع لوصفها وإضافة الصور.",
@@ -727,6 +741,7 @@ async function selectLevel(n){
    RENDER
    ============================================================ */
 function render(){
+  setTimeout(translateVisibleNotes, 0);
   document.documentElement.dir = state.lang==="ar" ? "rtl" : "ltr";
   document.documentElement.lang = state.lang;
   document.getElementById("app").innerHTML = ({
@@ -841,8 +856,8 @@ function renderPendingPanel(){
       return `
       <div class="pending-item">
         <div class="pending-item-body" data-view-issue="${p.issueId}">
-          <div class="pending-item-cat">${cat?tr(cat):p.category}${p.location?` · ${p.location}`:""}${p.assets?` · ${p.assets}`:""}${riskBadge(p.risk)}</div>
-          ${p.text?`<div class="pending-item-text">${escapeHtml(p.text)}</div>`:""}
+          <div class="pending-item-cat">${cat?tr(cat):p.category}${p.location?` · ${escapeHtml(placeLabel(p.location))}`:""}${p.assets?` · ${p.assets}`:""}${riskBadge(p.risk)}</div>
+          ${p.text?noteHTML(p.text,"div","pending-item-text"):""}
           ${checkedNote?`<div class="pending-item-checked">${checkedNote}</div>`:""}
           <div class="pending-item-hint">${t("viewDetails")}</div>
         </div>
@@ -924,7 +939,7 @@ function renderFlaggedIssuesPanel(matches){
       <div class="pending-item">
         <div class="pending-item-body" data-view-issue="${m.issueId}">
           <div class="pending-item-cat">${m.tags.join(", ")}</div>
-          ${m.text?`<div class="pending-item-text">${escapeHtml(m.text)}</div>`:""}
+          ${m.text?noteHTML(m.text,"div","pending-item-text"):""}
           ${checkedNote?`<div class="pending-item-checked">${checkedNote}</div>`:""}
           <div class="pending-item-hint">${t("viewDetails")}</div>
         </div>
@@ -1074,6 +1089,37 @@ function renderSuccess(){
 }
 
 function escapeHtml(s){ const d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
+const ARABIC_LETTERS = /[\u0600-\u06FF]/;
+const noteTranslations = {};      // "ar|text" -> translated text ("" = none)
+let noteTranslateOff = false;     // the sheet script has no "translate" yet
+function noteNeedsTranslation(text){
+  if(!text || !String(text).trim()) return false;
+  return ARABIC_LETTERS.test(text) ? state.lang === "en" : state.lang === "ar";
+}
+function noteHTML(text, tag, cls){
+  const done = noteNeedsTranslation(text) && noteTranslations[state.lang + "|" + text];
+  if(!done) return `<${tag} class="${cls}">${escapeHtml(text)}</${tag}>`;
+  return `<${tag} class="${cls}">${escapeHtml(done)}</${tag}><${tag} class="note-original">${t("originalNote")}: ${escapeHtml(text)}</${tag}>`;
+}
+// Asks the sheet script for the notes on screen that are in the other language, once each.
+async function translateVisibleNotes(){
+  if(noteTranslateOff || !state.officer) return;
+  const lang = state.lang;
+  const texts = [...(state.pendingIssues || []), ...(state.reportedIssues || []), state.viewingIssue]
+    .filter(Boolean).map(x=>x.text).filter(x=>noteNeedsTranslation(x) && !((lang + "|" + x) in noteTranslations));
+  const todo = [...new Set(texts)].slice(0, 30);
+  if(!todo.length) return;
+  todo.forEach(x=>{ noteTranslations[lang + "|" + x] = ""; });
+  // same sign-in check as the place list (older scripts want the ID + password)
+  const creds = state.token ? {} : { id: state.officer, password: state.legacyPassword };
+  const { ok, data } = await callScript("translate", { texts: todo, target: lang, ...creds });
+  if(ok && data && Array.isArray(data.translations)){
+    todo.forEach((x,i)=>{ noteTranslations[lang + "|" + x] = String(data.translations[i] || "").trim(); });
+    render();
+  } else {
+    noteTranslateOff = true;
+  }
+}
 
 /* ============================================================
    ISSUE DETAIL MODAL — lets an officer standing at a flagged spot open
@@ -1095,7 +1141,7 @@ function renderIssueDetailModal(){
   const cat = CATEGORIES.find(c=>c.id===iss.category);
   const mediaUrls = String(iss.media||"").split(",").map(s=>s.trim()).filter(Boolean);
   const tagsLabel = iss.tags && iss.tags.length ? iss.tags.join(", ") : (iss.assets || "");
-  const metaParts = [iss.location, tagsLabel].filter(Boolean);
+  const metaParts = [iss.location ? escapeHtml(placeLabel(iss.location)) : "", tagsLabel].filter(Boolean);
   const checkedNote = iss.lastCheckedBy ? t("lastChecked", iss.lastCheckedBy, iss.lastCheckedAt ? new Date(iss.lastCheckedAt).toLocaleString() : "") : "";
   const submittedWhen = iss.submittedAt ? new Date(iss.submittedAt).toLocaleString() : "";
   return `
@@ -1107,7 +1153,7 @@ function renderIssueDetailModal(){
       </div>
       <div class="modal-body">
         ${metaParts.length?`<div class="modal-meta">${metaParts.join(" · ")}</div>`:""}
-        ${iss.text?`<p class="modal-desc">${escapeHtml(iss.text)}</p>`:`<p class="modal-desc muted">${t("noDescription")}</p>`}
+        ${iss.text?noteHTML(iss.text,"p","modal-desc"):`<p class="modal-desc muted">${t("noDescription")}</p>`}
         <div class="modal-media-label">${t("photoLabel")}</div>
         ${mediaUrls.length ? `
         <div class="modal-media-grid">
