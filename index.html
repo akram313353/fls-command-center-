@@ -292,6 +292,16 @@ function parsePlace(raw){
   if(!en) return null;
   return { id:en, en, ar: (o.ar ? String(o.ar).trim() : ar) || en };
 }
+// v6 sheet scripts send every area's places with the sign-in ({ "Level 0": [...] }),
+// so opening an area needs no extra request.
+function preloadPlaces(byArea){
+  if(!byArea || typeof byArea !== "object") return;
+  TOWERS.filter(tw=>tw.remoteLocations).forEach(tw=>{
+    const key = Object.keys(byArea).find(a=>a.trim().toLowerCase()===tw.en.toLowerCase());
+    const list = key && Array.isArray(byArea[key]) ? byArea[key].map(n=>parsePlace(n)).filter(Boolean) : [];
+    if(list.length) state.areaLocations[tw.id] = list;
+  });
+}
 // Shows a stored place name (always English) in the officer's language.
 function placeLabel(name){
   if(!name) return "";
@@ -466,6 +476,18 @@ function compressImageFile(file, maxDim=1024, quality=0.7){
     };
     reader.readAsDataURL(file);
   });
+}
+let mediaUploadOff = false;   // the sheet script has no "upload-media" yet
+function addMedia(kind, url){
+  const item = { kind, url };
+  state.draft.media.push(item);
+  if(mediaUploadOff || !navigator.onLine || !state.officer) return item;
+  const creds = state.token ? {} : { id: state.officer, password: state.legacyPassword };
+  item.uploading = callScript("upload-media", { data: url, ...creds }).then(({ ok, data })=>{
+    if(ok && data && data.link) item.link = data.link;
+    else if(data && /unknown action/i.test(String(data.error || ""))) mediaUploadOff = true;
+  }).catch(()=>{}).finally(()=>{ item.uploading = null; });
+  return item;
 }
 function readFileAsDataUrl(file){
   return new Promise((resolve, reject)=>{
@@ -729,10 +751,9 @@ async function selectLevel(n){
   go("location");
   state.pendingLoading = true; state.pendingIssues = [];
   if(state.screen==="location") render();
-  const [{ ok, data }] = await Promise.all([
-    callScript("pending-issues", { tower: state.tower.en, floor: state.level }),
-    loadAreaLocations(state.tower),
-  ]);
+  const tower = state.tower;
+  loadAreaLocations(tower).then(()=>{ if(state.screen==="location" && state.tower===tower) render(); });
+  const { ok, data } = await callScript("pending-issues", { tower: tower.en, floor: state.level });
   state.pendingLoading = false;
   state.pendingIssues = (ok && data.pending) ? data.pending : [];
   if(state.screen==="location") render();
@@ -1248,7 +1269,7 @@ function bindEvents(){
       const id = $("#in-id").value.trim(); const pw = $("#in-pw").value;
       const btn = $("#btn-login-submit"); btn.disabled = true; btn.innerHTML = `<span class="spinner"></span>`;
       const { ok, data } = await callScript("login", { id, password: pw });
-      if(ok){ state.officer = id; state.token = data.token || null; state.legacyPassword = state.token ? null : pw; state.loginError=""; state.registerNote=""; go("tower"); flushOfflineQueue(); }
+      if(ok){ state.officer = id; state.token = data.token || null; state.legacyPassword = state.token ? null : pw; state.loginError=""; state.registerNote=""; preloadPlaces(data.places); go("tower"); flushOfflineQueue(); }
       else { state.loginError = (data && data.error) || t("loginErrorMsg"); render(); $("#in-pw").focus(); }
     });
   }
@@ -1386,14 +1407,14 @@ function bindEvents(){
     // camera photo — resized + re-encoded before it ever becomes base64
     $("#in-photo").addEventListener("change", async e=>{
       const file = e.target.files[0]; if(!file) return;
-      try{ const url = await compressImageFile(file); state.draft.media.push({kind:"photo", url}); render(); }
+      try{ const url = await compressImageFile(file); addMedia("photo", url); render(); }
       catch(err){ toast(t("networkError"), true); }
     });
 
     // camera video — read as-is (compressing video in-browser isn't practical here)
     $("#in-video").addEventListener("change", async e=>{
       const file = e.target.files[0]; if(!file) return;
-      try{ const url = await readFileAsDataUrl(file); state.draft.media.push({kind:"video", url}); render(); }
+      try{ const url = await readFileAsDataUrl(file); addMedia("video", url); render(); }
       catch(err){ toast(t("networkError"), true); }
     });
 
@@ -1402,9 +1423,9 @@ function bindEvents(){
       const file = e.target.files[0]; if(!file) return;
       try{
         if(file.type.startsWith("video/")){
-          const url = await readFileAsDataUrl(file); state.draft.media.push({kind:"video", url});
+          const url = await readFileAsDataUrl(file); addMedia("video", url);
         } else {
-          const url = await compressImageFile(file); state.draft.media.push({kind:"photo", url});
+          const url = await compressImageFile(file); addMedia("photo", url);
         }
         render();
       }catch(err){ toast(t("networkError"), true); }
@@ -1437,7 +1458,13 @@ function bindEvents(){
       // sending the round ends this patrol; its total time goes with it
       const totals = state.patrol.sessionId ? patrolTotals() : null;
       const patrolInfo = totals ? { sessionId: state.patrol.sessionId, patrolDuration: totals.totalDuration, patrolDurationMs: totals.totalDurationMs, patrolPaused: totals.totalPaused } : {};
-      const entries = state.reports.map(r=>({ tower:r.towerObj.en, level:r.level, location:r.locationId, category:r.category, assets:r.assets, text:r.text, photos:r.media.map(m=>m.url), ...(r.risk ? { risk:r.risk } : {}) }));
+      const stillSending = state.reports.flatMap(r=>r.media).map(m=>m.uploading).filter(Boolean);
+      if(stillSending.length && navigator.onLine){
+        state.sending = true; render();
+        await Promise.race([Promise.all(stillSending), new Promise(r=>setTimeout(r, 20000))]);
+      }
+      const entries = state.reports.map(r=>({ tower:r.towerObj.en, level:r.level, location:r.locationId, category:r.category, assets:r.assets, text:r.text,
+        photos:r.media.filter(m=>!m.link).map(m=>m.url), mediaLinks:r.media.filter(m=>m.link).map(m=>m.link), ...(r.risk ? { risk:r.risk } : {}) }));
 
       if(!navigator.onLine){
         queueOffline(state.officer, entries, patrolInfo);
