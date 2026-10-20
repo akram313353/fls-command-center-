@@ -4,6 +4,15 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
 <title>FLS Command Center — Corinthia Tripoli</title>
+<!-- installable app: name, icon and colours used on the phone's home screen -->
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="theme-color" content="#faf8f3" />
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="FLS" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -124,6 +133,11 @@
   .btn.ghost{background:transparent;color:var(--ink-soft);border:1px solid var(--line);}
   .btn.ghost:hover{border-color:var(--brass);color:var(--brass-dark);background:transparent;}
   .btn[disabled]{opacity:.45;cursor:not-allowed;} .btn[disabled]:hover{background:var(--ink);}
+  .install-box{margin-top:18px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--brass-tint);display:flex;align-items:center;gap:12px;text-align:start;}
+  .install-box img{width:40px;height:40px;border-radius:10px;flex-shrink:0;}
+  .install-box .t{flex:1;font-size:12.5px;line-height:1.45;color:var(--ink-soft);}
+  .install-btn{flex-shrink:0;padding:9px 16px;border:none;border-radius:var(--radius-sm);background:var(--ink);color:#fff;font:inherit;font-size:13px;font-weight:600;cursor:pointer;}
+  .install-btn:focus-visible{outline:2px solid var(--brass);outline-offset:2px;}
   .login-foot{margin-top:20px;font-size:11px;color:var(--muted);letter-spacing:.03em;}
   .switch-link{margin-top:16px;font-size:12.5px;color:var(--muted);}
   .switch-link button{background:none;border:none;color:var(--brass-dark);font-weight:700;cursor:pointer;padding:0;font-size:12.5px;text-decoration:underline;}
@@ -554,6 +568,8 @@ const STR = {
     loginHeading:"FLS Command Center", loginSub:"Fire & Life Safety patrol sign-in",
     fieldId:"Employee ID", fieldPw:"Password", signInBtn:"Sign In & Start Patrol",
     loginFoot:"Signing in and every submission is saved straight into the FLS spreadsheet.",
+    installSub:"Install the FLS app on this phone — it opens from your home screen, full screen.", installBtn:"Install",
+    installIos:"Install the app: tap Share, then “Add to Home Screen”.",
     loginErrorMsg:"ID or password not recognised. Please try again.",
     noAccount:"New officer?", registerLink:"Register an account",
     haveAccount:"Already registered?", loginLink:"Sign in instead",
@@ -614,6 +630,8 @@ const STR = {
     loginHeading:"مركز قيادة السلامة", loginSub:"تسجيل دخول جولة السلامة من الحريق",
     fieldId:"الرقم الوظيفي", fieldPw:"كلمة المرور", signInBtn:"تسجيل الدخول وبدء الجولة",
     loginFoot:"يتم حفظ تسجيل الدخول وكل بلاغ مباشرة في جدول بيانات السلامة.",
+    installSub:"ثبّت تطبيق FLS على هذا الهاتف — يفتح من الشاشة الرئيسية بملء الشاشة.", installBtn:"تثبيت",
+    installIos:"لتثبيت التطبيق: اضغط زر المشاركة ثم «إضافة إلى الشاشة الرئيسية».",
     loginErrorMsg:"الرقم الوظيفي أو كلمة المرور غير صحيحة. حاول مرة أخرى.",
     noAccount:"موظف جديد؟", registerLink:"إنشاء حساب",
     haveAccount:"لديك حساب بالفعل؟", loginLink:"تسجيل الدخول",
@@ -830,6 +848,7 @@ function renderLogin(){
       <div class="field"><label>${t("fieldPw")}</label><input type="password" inputmode="numeric" pattern="[0-9]*" id="in-pw" placeholder="••••" autocomplete="off" required /></div>
       <button class="btn" type="submit" id="btn-login-submit">${t("signInBtn")}</button>
     </form>
+    ${installBlock()}
     <div class="login-foot">${t("loginFoot")}</div>
   </div></div>`;
 }
@@ -1502,6 +1521,36 @@ function bindEvents(){
       go("tower");
     });
   }
+}
+
+/* ============================================================
+   INSTALL AS AN APP — the officer installs it once and then opens it from
+   the home-screen icon, full screen, with no link. Android (Chrome) gets an
+   Install button; iPhone shows how to add it (Safari has no button).
+   Nothing is shown when the app is already running installed.
+   ============================================================ */
+let installPrompt = null;
+function isInstalled(){ return (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true; }
+function isIOS(){ return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1); }
+function installBlock(){
+  if(isInstalled()) return "";
+  if(installPrompt) return `<div class="install-box"><img src="icon-192.png" alt="" /><div class="t">${t("installSub")}</div><button type="button" class="install-btn" id="btn-install" onclick="installApp()">${t("installBtn")}</button></div>`;
+  if(isIOS()) return `<div class="install-box"><img src="icon-192.png" alt="" /><div class="t">${t("installIos")}</div></div>`;
+  return "";
+}
+async function installApp(){
+  if(!installPrompt) return;
+  const prompt = installPrompt;
+  installPrompt = null;
+  prompt.prompt();
+  try{ await prompt.userChoice; }catch(e){ /* closed */ }
+  if(state.screen==="login") render();
+}
+window.addEventListener("beforeinstallprompt", e=>{ e.preventDefault(); installPrompt = e; if(state.screen==="login") render(); });
+window.addEventListener("appinstalled", ()=>{ installPrompt = null; if(state.screen==="login") render(); });
+// service worker: quick start, opens with no signal, always picks up updates (see sw.js)
+if("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")){
+  window.addEventListener("load", ()=>{ navigator.serviceWorker.register("sw.js").catch(()=>{ /* the app works without it */ }); });
 }
 
 render();
