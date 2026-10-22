@@ -549,7 +549,7 @@ function getAssets(towerId, level, categoryId){ return ASSET_REGISTRY[`${towerId
 /* STANDALONE build, now connected to a real Google Sheet via Apps Script.
    Register, sign-in, and every submitted issue (with photos) are written
    straight into that spreadsheet. */
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbws1utWsxeSOF3cmDLN4HeDuvPUwbyKiUJHIfjG5LUnSOESE3csu67cDbDmijy6E86m/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxbVEcetJEcwj2GwzRkKzQOKuZo-rkFI-36Ob0_0uKRAvGK9T4jB6nl8kW96fkO8Af7/exec";   // the v7 sheet script (deployment "v41")
 
 // How long the app waits for the sheet script before giving up (sign-in then
 // tries once more) instead of spinning for minutes on a stalled connection.
