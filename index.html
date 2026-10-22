@@ -258,6 +258,155 @@
   .spinner{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;animation:spin .7s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg);}}
 
+
+  /* ---------- QR checkpoints ---------- */
+  .cp-panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 16px 6px;margin-bottom:18px;}
+  .cp-panel.is-blocked{border-color:#e2b2a6;}
+  .cp-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:12px;}
+  .cp-head h2{margin:0;font-size:19px;font-weight:600;}
+  .cp-count{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .cp-count b{font-family:'Playfair Display',serif;font-size:22px;color:var(--ink);}
+  .btn.cp-scan-btn{font-size:15px;padding:15px 16px;} .cp-scan-btn svg{width:19px;height:19px;}
+  .cp-hint{font-size:12px;color:var(--muted);margin:8px 2px 2px;line-height:1.45;} .cp-hint b{color:var(--ink-soft);}
+  .cp-block-msg{background:var(--danger-tint);color:var(--danger);font-size:12.5px;font-weight:600;line-height:1.5;padding:10px 12px;border-radius:8px;margin-bottom:12px;}
+  .cp-list{list-style:none;margin:12px 0 0;padding:0;}
+  .cp-row{display:flex;align-items:flex-start;gap:11px;padding:11px 4px;border-top:1px solid var(--line-soft);}
+  .cp-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:5px;background:transparent;border:1.5px solid #c9c1ae;}
+  .cp-row.is-ok .cp-dot, .cp-level-line.is-ok .cp-dot, .cp-sum-row.is-ok .cp-dot{background:var(--success);border-color:var(--success);}
+  .cp-row.is-missed .cp-dot{background:#b26a00;border-color:#b26a00;}
+  .cp-row.is-missing .cp-dot, .cp-level-line.is-missing .cp-dot, .cp-sum-row.is-missing .cp-dot{background:var(--danger);border-color:var(--danger);}
+  .cp-row-main{flex:1;min-width:0;}
+  .cp-row-name{font-size:14px;font-weight:600;line-height:1.35;overflow-wrap:anywhere;}
+  .cp-id{font-family:'Courier New',monospace;font-size:12px;font-weight:700;color:var(--brass-dark);margin-inline-end:6px;letter-spacing:0;}
+  .cp-row-status{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.45;overflow-wrap:anywhere;}
+  .cp-row.is-ok .cp-row-status{color:var(--success);}
+  .cp-row.is-missed .cp-row-status{color:#8a5300;}
+  .cp-row.is-missing{background:var(--danger-tint);border-radius:8px;padding-inline:10px;border-top-color:transparent;margin:3px 0;}
+  .cp-row.is-missing .cp-row-name, .cp-row.is-missing .cp-row-status, .cp-row.is-missing .cp-id{color:var(--danger);}
+  .cp-reason{font-style:italic;} .cp-wait{color:var(--brass-dark);font-weight:700;}
+  .cp-miss-btn{flex-shrink:0;align-self:center;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font:inherit;font-size:11.5px;font-weight:600;color:var(--ink-soft);cursor:pointer;}
+  .cp-miss-btn:hover{border-color:var(--danger);color:var(--danger);} .cp-miss-btn:disabled{opacity:.45;cursor:not-allowed;}
+  .cp-level-line{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--muted);margin-top:3px;}
+  .cp-level-line .cp-dot{margin-top:0;width:7px;height:7px;}
+  .cp-level-line.is-ok{color:var(--success);} .cp-level-line.is-missing{color:var(--danger);}
+  .level-nav{display:flex;gap:10px;margin-top:20px;}
+  .level-nav .btn{flex:1;width:auto;min-width:0;padding:13px 8px;font-size:13px;letter-spacing:0;white-space:nowrap;gap:6px;}
+  .level-nav-btn svg{width:16px;height:16px;flex-shrink:0;}
+  .level-nav-btn svg.flip{transform:scaleX(-1);}
+  html[dir="rtl"] .level-nav-btn svg{transform:scaleX(-1);} html[dir="rtl"] .level-nav-btn svg.flip{transform:none;}
+  .hint-line.level-top-hint{text-align:center;margin:14px 0 0;}
+  .cp-summary{margin-bottom:6px;}
+  .cp-sum-row{display:flex;align-items:flex-start;gap:11px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-sm);padding:13px 14px;margin-bottom:10px;}
+  .cp-sum-row.is-missing{border-color:#e2b2a6;background:var(--danger-tint);}
+  .cp-sum-main{flex:1;min-width:0;} .cp-sum-title{font-size:14px;font-weight:600;} .cp-sum-meta{font-size:12px;color:var(--muted);margin-top:2px;}
+  .cp-sum-head{font-size:11px;font-weight:700;margin-top:10px;color:var(--ink-soft);}
+  .cp-sum-list{margin:4px 0 0;padding-inline-start:18px;font-size:12.5px;line-height:1.55;overflow-wrap:anywhere;}
+  .cp-sum-list.is-missing{color:var(--danger);font-weight:600;} .cp-sum-list.is-missed{color:#8a5300;}
+  .btn.cp-goto{width:auto;margin-top:10px;padding:9px 14px;font-size:12.5px;background:var(--panel);}
+  .btn.cp-finish-btn{margin-top:14px;}
+  .hint-line.cp-no-issues{margin:0 0 6px;}
+  .cp-success-line{max-width:340px;margin:4px auto 0;font-size:13px;font-weight:600;color:var(--ink-soft);}
+  .admin-link{margin-top:6px;width:100%;background:transparent;border:1px dashed var(--brass);border-radius:var(--radius-sm);color:var(--brass-dark);font:inherit;font-size:13px;font-weight:700;padding:14px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;}
+  .admin-link:hover{background:var(--brass-tint);} .admin-link svg{width:17px;height:17px;}
+  .cp-scan-btn:focus-visible, .cp-miss-btn:focus-visible, .level-nav-btn:focus-visible, .cp-goto:focus-visible, .admin-link:focus-visible, .cp-x:focus-visible, .cp-sheet .btn:focus-visible, .qr-filter select:focus-visible, .qr-print-btn:focus-visible{outline:2px solid var(--brass);outline-offset:2px;}
+
+  /* scanner + checkpoint windows (drawn outside #app, above everything but the toast) */
+  html.cp-locked, html.cp-locked body{overflow:hidden;}
+  .cp-scan{position:fixed;inset:0;z-index:55;background:#14110d;color:#fff;display:flex;flex-direction:column;align-items:center;padding:calc(14px + env(safe-area-inset-top)) 16px calc(18px + env(safe-area-inset-bottom));overflow-y:auto;}
+  .cp-scan-head{width:100%;max-width:440px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;}
+  .cp-scan-head h2{margin:0 0 4px;font-size:21px;font-weight:600;color:#fff;}
+  .cp-scan-sub{font-size:12.5px;color:#d9d2c3;line-height:1.55;} .cp-scan-sub b{color:#f1dcae;}
+  .cp-x{width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.28);background:transparent;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+  .cp-x svg{width:18px;height:18px;}
+  .cp-reader-wrap{position:relative;width:100%;max-width:440px;border-radius:14px;overflow:hidden;background:#000;min-height:260px;}
+  .cp-reader{width:100%;} .cp-reader video{display:block;width:100% !important;height:auto !important;}
+  .cp-layer.is-leaving, .cp-layer.is-leaving *{visibility:hidden;pointer-events:none;transition:none !important;}
+  .cp-reader-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:22px;font-size:13.5px;line-height:1.5;color:#e6dfcf;background:#000;}
+  .cp-scan-msg{width:100%;max-width:440px;margin-top:12px;}
+  .cp-scan-msg .m{border-radius:10px;padding:11px 13px;font-size:13.5px;font-weight:600;line-height:1.45;}
+  .cp-scan-msg .m.error{background:#5c2116;color:#ffdcd2;} .cp-scan-msg .m.info{background:#3b3120;color:#f3e0b6;}
+  .cp-scan-hint{max-width:440px;font-size:12px;color:#aca493;text-align:center;margin:12px 0 14px;line-height:1.5;}
+  .btn.cp-scan-cancel{max-width:440px;color:#fff;border-color:rgba(255,255,255,.32);}
+  .btn.cp-scan-cancel:hover{color:#fff;border-color:#fff;background:transparent;}
+  .cp-sheet-backdrop{position:fixed;inset:0;z-index:55;background:rgba(20,17,13,.55);display:flex;align-items:flex-end;justify-content:center;}
+  .cp-sheet{background:var(--panel);width:100%;max-width:440px;max-height:92vh;overflow-y:auto;border-radius:18px 18px 0 0;border-top:1px solid var(--line);padding:24px 20px calc(20px + env(safe-area-inset-bottom));text-align:center;}
+  @media(min-width:600px){.cp-sheet-backdrop{align-items:center;padding:20px;} .cp-sheet{border-radius:var(--radius);border:1px solid var(--line);}}
+  .cp-sheet h2{margin:0 0 6px;font-size:21px;}
+  .cp-ok-meta{font-size:12.5px;color:var(--muted);line-height:1.5;}
+  .cp-warn{margin-top:14px;text-align:start;background:#fcebc4;color:#6e4500;border-radius:10px;padding:11px 13px;font-size:12.5px;line-height:1.5;}
+  .cp-warn ul{margin:4px 0 6px;padding-inline-start:18px;font-weight:700;overflow-wrap:anywhere;}
+  .cp-offline-note{margin-top:12px;text-align:start;background:var(--danger-tint);color:var(--danger);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.5;}
+  .cp-sheet-actions{display:flex;gap:10px;margin-top:18px;} .cp-sheet-actions .btn{flex:1;width:auto;}
+  .cp-sheet-actions .btn svg{width:17px;height:17px;}
+  .cp-miss-sheet{text-align:start;}
+  .cp-miss-cp{font-size:16px;font-weight:700;line-height:1.35;overflow-wrap:anywhere;margin-top:2px;}
+  .cp-field-label{display:block;font-size:12.5px;font-weight:600;margin:16px 0 6px;}
+  .cp-sheet textarea{min-height:100px;}
+  .cp-field-error{color:var(--danger);font-size:12px;font-weight:600;min-height:16px;margin-top:6px;}
+  .btn.cp-danger-btn{background:var(--danger);} .btn.cp-danger-btn:hover{background:#7f2f21;}
+
+  /* admin: printable QR labels, 8 per A4 page */
+  main.qr-main{max-width:920px;}
+  .qr-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:10px;}
+  .qr-filter{display:flex;flex-direction:column;gap:5px;flex:1;min-width:130px;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;}
+  html[dir="rtl"] .qr-filter{letter-spacing:0;text-transform:none;}
+  .qr-filter select{font:inherit;font-size:14px;letter-spacing:0;text-transform:none;color:var(--ink);padding:11px 12px;border:1px solid var(--line);border-radius:var(--radius-sm);background:#fff;}
+  .btn.qr-print-btn{width:auto;flex:1;min-width:140px;}
+  .qr-count{font-size:12px;color:var(--muted);margin:4px 0 14px;}
+  .qr-page{background:#fff;border:1px solid var(--line);border-radius:6px;display:grid;grid-template-columns:1fr 1fr;margin-bottom:16px;overflow:hidden;}
+  .qr-label{display:flex;align-items:center;gap:12px;padding:14px;border:1px dashed #cdc4b0;margin:-.5px;min-width:0;}
+  .qr-code{width:44%;flex-shrink:0;aspect-ratio:1;} .qr-code svg{display:block;width:100%;height:100%;}
+  .qr-text{flex:1;min-width:0;}
+  .qr-name{font-family:'Playfair Display',Georgia,serif;font-weight:700;font-size:15px;line-height:1.2;overflow-wrap:anywhere;color:#000;}
+  .qr-name-ar{font-family:'Cairo',sans-serif;font-size:13px;font-weight:600;margin-top:3px;color:#000;}
+  .qr-where{font-size:11px;color:#555;margin-top:6px;}
+  .qr-raw{font-family:'Courier New',monospace;font-size:11px;font-weight:700;margin-top:4px;color:#000;overflow-wrap:anywhere;}
+  @media print{
+    @page{size:A4 portrait;margin:10mm;}
+    html.on-qrprint body{background:#fff;}
+    html.on-qrprint .topbar, html.on-qrprint .offline-banner, html.on-qrprint .paused-banner, html.on-qrprint .progress-rail,
+    html.on-qrprint .no-print, html.on-qrprint .toast, html.on-qrprint .review-fab{display:none !important;}
+    html.on-qrprint #app{min-height:0;display:block;}
+    html.on-qrprint main.qr-main{padding:0;margin:0;max-width:none;display:block;}
+    html.on-qrprint .qr-page{width:190mm;height:276mm;margin:0;border:none;border-radius:0;grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,1fr);break-after:page;page-break-after:always;break-inside:avoid;}
+    html.on-qrprint .qr-page:last-child{break-after:auto;page-break-after:auto;}
+    html.on-qrprint .qr-label{padding:5mm;gap:5mm;margin:0;border:.3mm dashed #8f8f8f;break-inside:avoid;}
+    html.on-qrprint .qr-code{width:46mm;height:46mm;aspect-ratio:auto;}
+    html.on-qrprint .qr-name{font-size:14pt;} html.on-qrprint .qr-name-ar{font-size:12pt;}
+    html.on-qrprint .qr-where{font-size:9pt;color:#333;} html.on-qrprint .qr-raw{font-size:9pt;}
+  }
+  @media(max-width:600px){.qr-page{grid-template-columns:1fr;}}
+  .cp-panel, .cp-summary{scroll-margin-top:110px;}
+  .cp-count b, .qr-name{font-variant-numeric:lining-nums;}   /* Playfair's old-style 1 reads like "ı" */
+  .cp-row.is-todo .cp-miss-btn{border-color:transparent;background:transparent;color:var(--muted);text-decoration:underline;text-underline-offset:2px;padding:7px 4px;}
+  .cp-row.is-todo .cp-miss-btn:hover{color:var(--danger);}
+  .toast{width:max-content;max-width:calc(100vw - 32px);} .toast:empty{visibility:hidden;}
+  /* the scans lead the level: compact checkpoint card, folded extras, the scanned place's banner */
+  .cp-progress{display:block;width:100%;height:6px;border:none;border-radius:6px;background:var(--line-soft);overflow:hidden;margin:0 0 14px;-webkit-appearance:none;appearance:none;}
+  .cp-progress::-webkit-progress-bar{background:var(--line-soft);border-radius:6px;}
+  .cp-progress::-webkit-progress-value{background:var(--success);border-radius:6px;}
+  .cp-progress::-moz-progress-bar{background:var(--success);border-radius:6px;}
+  .cp-toggle{display:flex;align-items:center;gap:6px;background:none;border:none;padding:12px 2px;font:inherit;font-size:13px;font-weight:600;color:var(--brass-dark);cursor:pointer;text-align:start;}
+  .cp-toggle svg{width:15px;height:15px;flex-shrink:0;transform:rotate(90deg);transition:transform .2s;}
+  .cp-toggle.open svg{transform:rotate(-90deg);}
+  .cp-toggle.cp-other{color:var(--ink-soft);}
+  .cp-open-line{width:100%;display:flex;align-items:center;gap:9px;background:var(--danger-tint);border:1px solid #f0c9c1;border-radius:var(--radius-sm);color:var(--danger);font:inherit;font-size:12.5px;font-weight:700;line-height:1.4;padding:11px 13px;margin-bottom:4px;cursor:pointer;text-align:start;}
+  .cp-open-line svg{width:16px;height:16px;flex-shrink:0;}
+  button.cp-row-main{background:none;border:none;padding:0;margin:0;font:inherit;color:inherit;text-align:start;cursor:pointer;}
+  .cp-row-chev{align-self:center;color:var(--muted);flex-shrink:0;} .cp-row-chev svg{width:15px;height:15px;display:block;}
+  html[dir="rtl"] .cp-row-chev svg{transform:scaleX(-1);}
+  .cp-toggle:focus-visible, .cp-open-line:focus-visible, button.cp-row-main:focus-visible{outline:2px solid var(--brass);outline-offset:2px;border-radius:6px;}
+  .cp-scanned{display:flex;align-items:flex-start;gap:14px;background:var(--success-tint);border:1px solid #cfe2d3;border-radius:var(--radius);padding:16px;margin-bottom:12px;}
+  .cp-scanned-ring{width:46px;height:46px;border-radius:50%;background:var(--success);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .cp-scanned-ring svg{width:24px;height:24px;}
+  .cp-scanned-body{min-width:0;}
+  .cp-scanned-label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--success);font-weight:700;}
+  html[dir="rtl"] .cp-scanned-label{letter-spacing:0;text-transform:none;}
+  .cp-scanned h2{font-size:25px;line-height:1.2;margin:3px 0 4px;overflow-wrap:anywhere;font-variant-numeric:lining-nums;}
+  .cp-scanned-meta{font-size:12.5px;color:var(--muted);line-height:1.45;}
+  .cp-scanned + .cp-warn, .cp-scanned + .cp-offline-note{margin:0 0 12px;}
+  .cp-area-actions{margin:2px 0 20px;}
+  @media(prefers-reduced-motion:reduce){.toast{transition:none;} .cp-toggle svg{transition:none;}}
   @media(max-width:360px){.grid{grid-template-columns:1fr 1fr;}.login-card{padding:30px 22px 24px;}}
 </style>
 </head>
@@ -270,8 +419,9 @@
    DATA — edit these to match the property's real layout
    ============================================================ */
 const TOWERS = [
-  { id:"t1", en:"Tower 1", ar:"البرج 1", floors:26 },
-  { id:"t2", en:"Tower 2", ar:"البرج 2", floors:12 },
+  // cpCode: the tower's code on its QR checkpoints ("FLS|T1|L05|CP01")
+  { id:"t1", en:"Tower 1", ar:"البرج 1", floors:26, cpCode:"T1" },
+  { id:"t2", en:"Tower 2", ar:"البرج 2", floors:12, cpCode:"T2" },
   // Level -1 is a single area, not a tower: no floor grid, only the
   // categories listed here, and every issue carries a risk level (see
   // RISK_LEVELS). Its places are NOT listed in this file: they're loaded
@@ -401,7 +551,16 @@ function getAssets(towerId, level, categoryId){ return ASSET_REGISTRY[`${towerId
    straight into that spreadsheet. */
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbws1utWsxeSOF3cmDLN4HeDuvPUwbyKiUJHIfjG5LUnSOESE3csu67cDbDmijy6E86m/exec";
 
+// How long the app waits for the sheet script before giving up (sign-in then
+// tries once more) instead of spinning for minutes on a stalled connection.
+// Sending a patrol, photos and status changes keep waiting as before —
+// those must never be sent twice.
+const SCRIPT_TIMEOUTS = { "login":25000, "get-locations":20000, "pending-issues":20000, "check-duplicates":20000,
+  "translate":20000, "get-checkpoints":20000, "log-checkpoints":45000 };
 async function callScript(action, payload){
+  const waitMs = SCRIPT_TIMEOUTS[action];
+  const ctrl = waitMs && typeof AbortController !== "undefined" ? new AbortController() : null;
+  const timer = ctrl ? setTimeout(()=>ctrl.abort(), waitMs) : null;
   try{
     const res = await fetch(GOOGLE_SCRIPT_URL, {
       method: "POST",
@@ -411,11 +570,14 @@ async function callScript(action, payload){
       // every request carries the sign-in token the script handed out at
       // login, so the script only answers signed-in officers
       body: JSON.stringify({ action, ...payload, token: state.token }),
+      signal: ctrl ? ctrl.signal : undefined,
     });
     const data = await res.json().catch(()=>({}));
     return { ok: res.ok && data.ok !== false, data };
   }catch(e){
-    return { ok:false, data:{ error: t("networkError") } };
+    return { ok:false, data:{ error: t("networkError"), timedOut: !!(ctrl && ctrl.signal.aborted) } };
+  }finally{
+    if(timer) clearTimeout(timer);
   }
 }
 async function callScriptGet(params){
@@ -460,7 +622,7 @@ async function flushOfflineQueue(){
   if(flushed) toast(t("offlineFlushed", flushed));
   if(state.screen!=="login" && state.screen!=="register") render();
 }
-window.addEventListener("online", ()=>{ state.isOnline = true; flushOfflineQueue(); render(); });
+window.addEventListener("online", ()=>{ state.isOnline = true; flushOfflineQueue(); flushScanQueue(); render(); });
 window.addEventListener("offline", ()=>{ state.isOnline = false; render(); });
 
 /* ============================================================
@@ -513,12 +675,588 @@ function readFileAsDataUrl(file){
 }
 
 /* ============================================================
+   QR CHECKPOINTS — each tower level can have QR checkpoints (the sheet's
+   "Checkpoints" tab: CheckpointID | Tower | Level | Order | Name). During a
+   patrol the officer scans them in order with the phone camera. Every scan
+   — or a checkpoint marked missed, with a reason — is saved on the phone
+   first and sent to the sheet's Checkpoint_Log straight away, or as soon
+   as there's a connection again (with the original scan time). A level
+   that has been patrolled can't be left with the level arrows, and the
+   patrol can't be sent, until each of its checkpoints is scanned or
+   marked missed. Older sheet scripts send no checkpoints: then none of
+   this shows and the app works exactly as before.
+   ============================================================ */
+const FIRST_TOWER_FLOOR = 3;
+// fixed versions with integrity hashes, so phones only ever run these exact files
+const CP_LIBS = {
+  scanner: { src:"https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js", integrity:"sha384-c9d8RFSL+u3exBOJ4Yp3HUJXS4znl9f+z66d1y54ig+ea249SpqR+w1wyvXz/lk+" },
+  qr: { src:"https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js", integrity:"sha384-8FWZA6BGMXhsfO+BLtrJK0We6gg5o1JyO8xQm6peWDEUs17ACA5ziE/NIAkl9z2k" },
+};
+const libLoads = {};
+function loadLib(name){
+  if(!libLoads[name]){
+    libLoads[name] = new Promise((resolve, reject)=>{
+      const el = document.createElement("script");
+      el.src = CP_LIBS[name].src; el.integrity = CP_LIBS[name].integrity; el.crossOrigin = "anonymous"; el.async = true;
+      el.onload = ()=> resolve();
+      el.onerror = ()=>{ delete libLoads[name]; el.remove(); reject(new Error("not loaded")); };
+      document.head.appendChild(el);
+    });
+  }
+  return libLoads[name];
+}
+
+// The sheet script can take several seconds to start after a quiet spell:
+// wake it while the officer is still typing, so pressing Sign In is quick.
+let lastWarmUp = 0;
+function warmUpScript(){
+  if(Date.now() - lastWarmUp < 60000 || !navigator.onLine) return;
+  lastWarmUp = Date.now();
+  fetch(`${GOOGLE_SCRIPT_URL}?action=health`, { mode:"no-cors", cache:"no-store" }).catch(()=>{});
+}
+function scrollToEl(el){
+  if(!el) return;
+  const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block:"start" });
+}
+
+/* ---- checkpoint lists and this patrol's progress ---- */
+function cpKey(tower, level){ return tower && tower.cpCode && level != null ? `${tower.cpCode}|${level}` : null; }
+function cpList(tower, level){ const k = cpKey(tower, level); return (k && state.checkpoints && Array.isArray(state.checkpoints[k])) ? state.checkpoints[k] : []; }
+function cpDone(key){ return (key && state.cpLog && state.cpLog[key]) || {}; }   // { CP01: { status, at, reason, scanId } }
+function cpName(c){ return state.lang==="ar" && c.ar ? c.ar : c.name; }
+function cpLabel(c){ return `${c.id} · ${cpName(c)}`; }
+function fmtTime(ms){ return new Date(ms).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }); }
+function cpFurthest(list, done){ let f = -Infinity; list.forEach(c=>{ if(done[c.id] && done[c.id].status==="Scanned" && c.order>f) f = c.order; }); return f; }
+// checkpoints walked past without a scan — the same rule the sheet script flags
+function cpSkipped(list, done, cpId){
+  const me = list.find(c=>c.id===cpId); if(!me) return [];
+  const f = cpFurthest(list, done);
+  return list.filter(c=>c.id!==cpId && !done[c.id] && c.order>f && c.order<me.order);
+}
+function cpNext(list, done){ const f = cpFurthest(list, done); return list.find(c=>!done[c.id] && c.order>f) || list.find(c=>!done[c.id]) || null; }
+function cpMissing(tower, level){ const done = cpDone(cpKey(tower, level)); return cpList(tower, level).filter(c=>!done[c.id]); }
+// A level is part of this patrol once a checkpoint there was scanned or
+// marked missed, or an issue was logged there.
+function cpStarted(tower, level){
+  if(!cpList(tower, level).length) return false;
+  return Object.keys(cpDone(cpKey(tower, level))).length > 0 || state.reports.some(r=>r.towerId===tower.id && r.level===level);
+}
+function cpPatrolLevels(){
+  const seen = {}, out = [];
+  const add = (tower, level)=>{ const key = cpKey(tower, level); if(key && !seen[key] && cpStarted(tower, level)){ seen[key] = true; out.push({ tower, level, key }); } };
+  Object.keys(state.cpLog || {}).forEach(key=>{ const [code, lv] = key.split("|"); const tw = TOWERS.find(x=>x.cpCode===code); if(tw) add(tw, Number(lv)); });
+  state.reports.forEach(r=>{ if(r.towerObj && r.towerObj.cpCode) add(r.towerObj, r.level); });
+  return out;
+}
+function cpIncompleteLevels(){ return cpPatrolLevels().filter(l=>cpMissing(l.tower, l.level).length); }
+function cpStats(){
+  let scanned = 0, missed = 0;
+  Object.values(state.cpLog || {}).forEach(lv=>Object.values(lv).forEach(d=>{ if(d.status==="Missed") missed++; else scanned++; }));
+  return { scanned, missed };
+}
+// a fresher list for the level just opened, in the background (sign-in already brought one)
+async function refreshCheckpoints(tower, level){
+  const key = cpKey(tower, level);
+  if(!key || !state.checkpoints) return;
+  const creds = state.token ? {} : { id: state.officer, password: state.legacyPassword };
+  const { ok, data } = await callScript("get-checkpoints", { tower: tower.cpCode, level, ...creds });
+  if(!ok || !data || !Array.isArray(data.checkpoints) || !state.checkpoints) return;
+  if(JSON.stringify(state.checkpoints[key] || []) === JSON.stringify(data.checkpoints)) return;
+  state.checkpoints[key] = data.checkpoints;
+  if(state.screen==="location" && state.tower===tower && state.level===level) render();
+}
+
+/* ---- scans are kept on the phone and sent in order ---- */
+const SCAN_QUEUE_KEY = "fls_scan_queue";
+let scanQueueMem = null;   // this session's copy (also covers phones that won't let the app store data)
+function getScanQueue(){
+  if(!scanQueueMem){
+    try{ scanQueueMem = JSON.parse(localStorage.getItem(SCAN_QUEUE_KEY) || "[]"); }catch(e){ scanQueueMem = []; }
+    if(!Array.isArray(scanQueueMem)) scanQueueMem = [];
+  }
+  return scanQueueMem.slice();
+}
+function setScanQueue(q){
+  scanQueueMem = q.slice();
+  try{ localStorage.setItem(SCAN_QUEUE_KEY, JSON.stringify(q)); }catch(e){ /* kept in memory for this session */ }
+}
+function sameOfficer(a, b){ return String(a == null ? "" : a).trim().toLowerCase() === String(b == null ? "" : b).trim().toLowerCase(); }
+function myWaitingScans(){ return getScanQueue().filter(x=>sameOfficer(x.employeeId, state.officer)); }
+let scanFlushing = false, scanFlushAgain = false;
+async function flushScanQueue(){
+  if(scanFlushing){ scanFlushAgain = true; return; }
+  // the sheet checks the officer's ID + password on every scan, so scans wait for that officer's sign-in
+  if(!navigator.onLine || !state.officer || (!state.token && !state.legacyPassword)) return;
+  const before = myWaitingScans().length;
+  if(!before) return;
+  scanFlushing = true;
+  let refused = [];
+  try{
+    for(let round = 0; round < 20; round++){
+      scanFlushAgain = false;
+      const batch = myWaitingScans().slice(0, 25);
+      if(!batch.length) break;
+      const creds = state.token ? {} : { id: state.officer, password: state.legacyPassword };
+      const { ok, data } = await callScript("log-checkpoints", { scans: batch, sentAt: new Date().toISOString(), ...creds });
+      if(!ok || !data || !Array.isArray(data.results)) break;   // no signal / sheet busy: they stay on the phone for next time
+      const answered = new Set(data.results.map(r=>r.scanId));
+      refused = refused.concat(data.results.filter(r=>!r.ok));
+      setScanQueue(getScanQueue().filter(x=>!answered.has(x.scanId)));
+      if(!answered.size) break;
+    }
+  }finally{ scanFlushing = false; }
+  if(refused.length){
+    // the sheet didn't take these (e.g. the checkpoint was removed from the tab): show them as not done again
+    const ids = new Set(refused.map(r=>r.scanId));
+    Object.values(state.cpLog || {}).forEach(lv=>Object.keys(lv).forEach(id=>{ if(ids.has(lv[id].scanId)) delete lv[id]; }));
+    toast(t("cpRefused", refused.length, escapeHtml(refused[0].error || "")), true);
+  }
+  if(scanFlushAgain) setTimeout(flushScanQueue, 0);
+  if((myWaitingScans().length !== before || refused.length) && ["location","summary","level","success"].includes(state.screen)) render();
+}
+setInterval(()=>{ if(getScanQueue().length) flushScanQueue(); }, 30000);
+function recordCheckpoint(cp, status, reason){
+  const tower = state.tower, level = state.level, key = cpKey(tower, level);
+  const at = Date.now();
+  const scanId = `S${at.toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+  state.cpLog = state.cpLog || {};
+  (state.cpLog[key] = state.cpLog[key] || {})[cp.id] = { status, at, reason: reason || "", scanId };
+  const q = getScanQueue();
+  q.push({ scanId, employeeId: state.officer, patrolId: state.patrol.sessionId, tower: tower.cpCode, level,
+    checkpointId: cp.id, status, reason: reason || "", timestamp: new Date(at).toISOString() });
+  setScanQueue(q);
+  flushScanQueue();
+  return { at, scanId };
+}
+
+/* ---- leaving a level / sending the patrol ---- */
+function leaveLevelTo(n){
+  const missing = cpStarted(state.tower, state.level) ? cpMissing(state.tower, state.level) : [];
+  if(missing.length){
+    state.cpBlocked = cpKey(state.tower, state.level);
+    render();
+    scrollToEl(document.getElementById("cp-panel"));
+    toast(t("cpBlockedToast", missing.length), true);
+    return;
+  }
+  state.cpBlocked = null;
+  selectLevel(n);
+}
+function cpBlockSubmit(){
+  if(!cpIncompleteLevels().length) return false;
+  state.cpSubmitBlocked = true;
+  render();
+  scrollToEl(document.getElementById("cp-summary"));
+  toast(t("cpSubmitBlockedToast"), true);
+  return true;
+}
+
+/* ---- what the screens show ---- */
+function renderCheckpointPanel(){
+  const tower = state.tower, level = state.level;
+  const list = cpList(tower, level);
+  if(!list.length) return "";
+  const key = cpKey(tower, level), done = cpDone(key);
+  const count = list.filter(c=>done[c.id]).length;
+  const blocked = state.cpBlocked===key && count<list.length;
+  const furthest = cpFurthest(list, done);
+  const canScan = !!(state.officer && state.patrol.sessionId);
+  const paused = !!state.patrol.paused;
+  const waiting = new Set(getScanQueue().map(x=>x.scanId));
+  const next = cpNext(list, done);
+  const scanLeft = !!next || list.some(c=>done[c.id] && done[c.id].status==="Missed");   // a missed one can still be scanned
+  // the full list stays folded away; it opens by itself (red) when something was skipped or is missing
+  const autoOpen = blocked || list.some(c=>!done[c.id] && c.order < furthest);
+  const showList = autoOpen || !!state.cpShowList;
+  return `
+  <section class="cp-panel ${blocked?'is-blocked':''}" id="cp-panel" aria-labelledby="cp-panel-title">
+    <div class="cp-head">
+      <h2 id="cp-panel-title">${t("cpTitle")}</h2>
+      <div class="cp-count" title="${t("cpProgress", count, list.length)}"><b>${count}</b> / ${list.length}</div>
+    </div>
+    <progress class="cp-progress" value="${count}" max="${list.length}" aria-label="${t("cpProgress", count, list.length)}"></progress>
+    ${blocked?`<div class="cp-block-msg" role="alert">${t("cpBlocked")}</div>`:""}
+    ${canScan ? `<button class="btn cp-scan-btn" id="btn-scan-cp" ${paused || !scanLeft ?"disabled":""}>${icon("qr")} ${t("cpScanBtn")}</button>` : ""}
+    ${paused ? `<div class="cp-hint">${t("cpPausedHint")}</div>` : next ? `<div class="cp-hint">${t("cpNext")}: <b>${escapeHtml(cpLabel(next))}</b></div>` : `<div class="cp-hint">${t("cpLevelDone", list.length, level)}</div>`}
+    ${autoOpen ? "" : `<button class="cp-toggle ${showList?'open':''}" id="btn-cp-list" aria-expanded="${showList}">${showList ? t("cpHideAll") : t("cpShowAll", list.length)} ${icon("chevron")}</button>`}
+    ${showList ? `<ol class="cp-list">
+      ${list.map(c=>{
+        const d = done[c.id];
+        const skipped = !d && c.order < furthest;
+        const st = d ? (d.status==="Missed" ? "missed" : "ok") : (blocked || skipped ? "missing" : "todo");
+        const status = d
+          ? (d.status==="Missed" ? `${t("cpMissedAt", fmtTime(d.at))} — <span class="cp-reason">${escapeHtml(d.reason)}</span>` : t("cpScannedAt", fmtTime(d.at)))
+          : (skipped ? t("cpSkippedRow") : blocked ? t("cpNotScannedYet") : t("cpNotScanned"));
+        const body = `<div class="cp-row-name"><span class="cp-id">${escapeHtml(c.id)}</span>${escapeHtml(cpName(c))}</div>
+            <div class="cp-row-status">${status}${d && waiting.has(d.scanId) ? ` · <span class="cp-wait">${t("cpWaiting")}</span>` : ""}</div>`;
+        const scanned = d && d.status==="Scanned";
+        return `
+        <li class="cp-row is-${st}">
+          <span class="cp-dot" aria-hidden="true"></span>
+          ${scanned ? `<button class="cp-row-main" data-cp-open="${escapeHtml(c.id)}" title="${t("cpOpenHere")}">${body}</button>` : `<div class="cp-row-main">${body}</div>`}
+          ${!d && canScan ? `<button class="cp-miss-btn" data-cp-miss="${escapeHtml(c.id)}" ${paused?"disabled":""}>${t("cpMarkMissed")}</button>`
+            : scanned ? `<span class="cp-row-chev" aria-hidden="true">${icon("chevron")}</span>` : ""}
+        </li>`;
+      }).join("")}
+    </ol>` : ""}
+  </section>`;
+}
+// open issues on a level that has checkpoints: one line (each issue also shows at its checkpoint's place)
+function renderLevelIssues(){
+  if(state.pendingLoading) return `<div class="cp-hint">${t("pendingLoading")}</div>`;
+  const count = state.pendingIssues.length;
+  if(!count) return "";
+  if(state.cpShowPending) return renderPendingPanel() + `<button class="cp-toggle open" id="btn-cp-open" aria-expanded="true">${t("cpHideOpen")} ${icon("chevron")}</button>`;
+  return `<button class="cp-open-line" id="btn-cp-open" aria-expanded="false">${icon("alert")}<span>${t("cpOpenLine", count)}</span></button>`;
+}
+/* ---- a scan opens that place: "Scanned" at the top, its open issues, the report form ---- */
+// The issue place a checkpoint stands for: the tower's own place with that name ("Guest Lift",
+// "Corridor A" -> Corridor), so reports stay comparable with earlier ones; otherwise the checkpoint itself.
+function cpLocationFor(cp){
+  const name = String(cp.name || "").toLowerCase();
+  const hit = LOCATIONS.find(l=>name === l.en.toLowerCase())
+    || LOCATIONS.find(l=>{ const en = l.en.toLowerCase(); return name.startsWith(en) && !/[a-z0-9]/.test(name.charAt(en.length)); });
+  return hit || { id: cp.name, en: cp.name, ar: cp.ar || cp.name };
+}
+function cpOpenArea(cp, { skipped=[], offline=false }={}){
+  state.location = cpLocationFor(cp);
+  state.cpArea = { key: cpKey(state.tower, state.level), cpId: cp.id, locationId: state.location.id, skipped: skipped.map(c=>c.id), offline };
+  state.draft = {text:"", media:[], risk:DEFAULT_RISK}; state.selectedAssets = []; state.reportedTags = []; state.reportedIssues = [];
+  const cats = categoriesFor(state.tower);
+  if(cats.length===1){ state.activeCategory = cats[0].id; go("form"); } else go("category");
+}
+function cpAreaHere(){
+  const a = state.cpArea;
+  return a && state.location && a.locationId===state.location.id && a.key===cpKey(state.tower, state.level) ? a : null;
+}
+function renderScannedBanner(area){
+  const list = cpList(state.tower, state.level), done = cpDone(area.key);
+  const cp = list.find(c=>c.id===area.cpId) || { id: area.cpId, name: area.cpId };
+  const d = done[cp.id];
+  const count = list.filter(c=>done[c.id]).length;
+  const next = cpNext(list, done);
+  const stillSkipped = list.filter(c=>area.skipped.includes(c.id) && !done[c.id]);
+  const paused = !!state.patrol.paused;
+  return `
+  <section class="cp-scanned" aria-labelledby="cp-scanned-name">
+    <div class="cp-scanned-ring" aria-hidden="true">${icon("check")}</div>
+    <div class="cp-scanned-body">
+      <div class="cp-scanned-label">${t("cpScannedOk")}${d ? ` · ${fmtTime(d.at)}` : ""}</div>
+      <h2 id="cp-scanned-name">${escapeHtml(cpName(cp))}</h2>
+      <div class="cp-scanned-meta">${escapeHtml(cp.id)} · ${count < list.length ? t("cpProgress", count, list.length) : t("cpLevelDone", list.length, state.level)}</div>
+    </div>
+  </section>
+  ${stillSkipped.length ? `<div class="cp-warn" role="alert"><b>${t("cpOutOfOrder")}</b> ${t("cpSkippedList")}
+    <ul>${stillSkipped.map(c=>`<li>${escapeHtml(cpLabel(c))}</li>`).join("")}</ul>${t("cpGoBackHint", stillSkipped.length)}</div>` : ""}
+  ${area.offline ? `<div class="cp-offline-note">${t("cpSavedOffline")}</div>` : ""}
+  <div class="cp-area-actions">
+    ${next && state.patrol.sessionId ? `<button class="btn cp-scan-btn" id="btn-cp-scan-next" ${paused?"disabled":""}>${icon("qr")} ${t("cpScanNext")}</button>
+    <div class="cp-hint">${paused ? t("cpPausedHint") : `${t("cpNext")}: <b>${escapeHtml(cpLabel(next))}</b>`}</div>` : ""}
+    <button class="${next ? "cp-toggle" : "btn"}" id="btn-cp-level">${t("cpBackToLevel", state.level)}</button>
+  </div>`;
+}
+function cpLevelLine(n){
+  const list = cpList(state.tower, n);
+  if(!list.length) return "";
+  if(!cpStarted(state.tower, n)) return `<div class="cp-level-line"><span class="cp-dot" aria-hidden="true"></span>${t("cpLevelHas", list.length)}</div>`;
+  const done = cpDone(cpKey(state.tower, n));
+  const count = list.filter(c=>done[c.id]).length;
+  return `<div class="cp-level-line ${count<list.length?'is-missing':'is-ok'}"><span class="cp-dot" aria-hidden="true"></span>${t("cpLevelCount", count, list.length)}</div>`;
+}
+function renderCheckpointSummary(){
+  const levels = cpPatrolLevels();
+  if(!levels.length) return "";
+  const showBlock = state.cpSubmitBlocked && cpIncompleteLevels().length>0;
+  return `
+  <section class="cp-summary" id="cp-summary" aria-labelledby="cp-summary-title">
+    <div class="group-label" id="cp-summary-title">${t("cpTitle")}</div>
+    ${showBlock?`<div class="cp-block-msg" role="alert">${t("cpSubmitBlocked")}</div>`:""}
+    ${levels.map(l=>{
+      const list = cpList(l.tower, l.level), done = cpDone(l.key);
+      const missing = list.filter(c=>!done[c.id]);
+      const missed = list.filter(c=>done[c.id] && done[c.id].status==="Missed");
+      const scanned = list.length - missing.length - missed.length;
+      return `
+      <div class="cp-sum-row ${missing.length?'is-missing':'is-ok'}">
+        <span class="cp-dot" aria-hidden="true"></span>
+        <div class="cp-sum-main">
+          <div class="cp-sum-title">${tr(l.tower)} · ${t("floorLabel", l.level)}</div>
+          <div class="cp-sum-meta">${t("cpSumCounts", scanned, list.length, missed.length)}</div>
+          ${missing.length?`<div class="cp-sum-head">${t("cpSumMissing")}</div><ul class="cp-sum-list is-missing">${missing.map(c=>`<li>${escapeHtml(cpLabel(c))}</li>`).join("")}</ul>`:""}
+          ${missed.length?`<div class="cp-sum-head">${t("cpSumMissed")}</div><ul class="cp-sum-list is-missed">${missed.map(c=>`<li>${escapeHtml(cpLabel(c))} — <i>${escapeHtml(done[c.id].reason)}</i></li>`).join("")}</ul>`:""}
+          ${missing.length?`<button class="btn ghost cp-goto" data-cp-goto="${l.key}">${t("cpGoTo", l.level)}</button>`:""}
+        </div>
+      </div>`;
+    }).join("")}
+  </section>`;
+}
+
+/* ---- the camera scanner and the checkpoint windows. They're drawn outside
+   #app, so a screen refresh never interrupts the camera or a reason being typed. ---- */
+let cpScanner = null, cpScannerView = "", cpStartPromise = null, cpStopping = Promise.resolve();
+let cpScanStarting = false, cpScanSession = 0, cpScanBusy = false, cpLastBad = { text:"", at:0 }, cpReturnFocus = null;
+let cpLayer = null;   // the scanner / checkpoint window on screen now
+function cpOverlay(){
+  let el = document.getElementById("cp-overlay");
+  if(!el){ el = document.createElement("div"); el.id = "cp-overlay"; document.body.appendChild(el); }
+  return el;
+}
+function cpOverlayOpen(){ return !!cpLayer; }
+// The scanner library starts the camera without waiting for the picture to
+// play, and breaks (on some phones) if it's stopped before that: so it's only
+// stopped once the picture is playing, and its window stays in the page,
+// invisible, until the camera is really off.
+function whenPlaying(video){
+  // (right after play() the video already says "not paused", so check that frames are really coming)
+  if(!video || (video.currentTime > 0 && !video.paused && !video.ended && video.readyState > 2)) return Promise.resolve();
+  return new Promise(resolve=>{
+    const done = ()=>{ clearTimeout(timer); video.removeEventListener("playing", done); resolve(); };
+    const timer = setTimeout(done, 3000);
+    video.addEventListener("playing", done);
+  });
+}
+function stopScanner(){
+  const sc = cpScanner, view = cpScannerView, starting = cpStartPromise;
+  cpScanner = null; cpStartPromise = null;
+  if(!sc) return cpStopping;
+  cpStopping = Promise.resolve(starting).catch(()=>{})
+    .then(()=>{ const el = document.getElementById(view); return whenPlaying(el && el.querySelector("video")); })
+    .then(()=> sc.isScanning ? sc.stop() : null).catch(()=>{})
+    .then(()=>{ try{ sc.clear(); }catch(e){ /* already gone */ } });
+  return cpStopping;
+}
+function dropLayer(layer){
+  if(!layer) return;
+  if(layer.querySelector("video, .cp-reader")){ layer.classList.add("is-leaving"); cpStopping.then(()=>layer.remove()); }
+  else layer.remove();
+}
+function cpOverlayKeys(e){ if(e.key==="Escape") closeCpOverlay(); }
+function closeCpOverlay(){
+  cpScanSession++; cpScanBusy = false; cpScanStarting = false;
+  stopScanner();
+  dropLayer(cpLayer); cpLayer = null;
+  document.documentElement.classList.remove("cp-locked");
+  document.removeEventListener("keydown", cpOverlayKeys);
+  const back = cpReturnFocus && document.getElementById(cpReturnFocus);
+  if(back) back.focus({ preventScroll:true });
+}
+function showCpOverlay(html, focusSel){
+  const root = cpOverlay();
+  dropLayer(cpLayer);
+  const layer = document.createElement("div");
+  layer.className = "cp-layer";
+  layer.innerHTML = html;
+  root.appendChild(layer);
+  cpLayer = layer;
+  document.documentElement.classList.add("cp-locked");
+  document.removeEventListener("keydown", cpOverlayKeys);
+  document.addEventListener("keydown", cpOverlayKeys);
+  cpReturnFocus = "btn-scan-cp";
+  const f = focusSel && layer.querySelector(focusSel);
+  if(f) setTimeout(()=>{ try{ f.focus({ preventScroll:true }); }catch(e){ /* closed already */ } }, 30);
+  return layer;
+}
+// "FLS|T1|L05|CP01" -> { tower:"T1", level:5, id:"CP01" }
+function parseCheckpointCode(text){
+  const m = /^FLS\|([A-Za-z0-9]{1,6})\|L(-?\d{1,3})\|([A-Za-z0-9-]{1,20})$/.exec(String(text == null ? "" : text).trim());
+  return m ? { tower:m[1].toUpperCase(), level:Number(m[2]), id:m[3].toUpperCase() } : null;
+}
+function checkScannedCode(text){
+  const code = parseCheckpointCode(text);
+  if(!code) return { ok:false, kind:"error", message:t("cpNotFls") };
+  const tower = state.tower, level = state.level;
+  if(code.tower !== tower.cpCode || code.level !== level){
+    const tw = TOWERS.find(x=>x.cpCode===code.tower);
+    return { ok:false, kind:"error", message:t("cpWrongPlace", tw ? tr(tw) : code.tower, code.level, tr(tower), level) };
+  }
+  const cp = cpList(tower, level).find(c=>c.id===code.id);
+  if(!cp) return { ok:false, kind:"error", message:t("cpUnknown", code.id, level) };
+  const d = cpDone(cpKey(tower, level))[cp.id];
+  if(d && d.status==="Scanned") return { ok:false, kind:"info", message:t("cpAlready", escapeHtml(cpLabel(cp)), fmtTime(d.at)) };
+  return { ok:true, cp };
+}
+async function openScanner(){
+  if(!state.patrol.sessionId || state.patrol.paused) return;
+  const tower = state.tower, level = state.level;
+  const list = cpList(tower, level);
+  if(!list.length) return;
+  const next = cpNext(list, cpDone(cpKey(tower, level)));
+  const session = ++cpScanSession;
+  cpScanBusy = false; cpLastBad = { text:"", at:0 };
+  const root = showCpOverlay(`
+  <div class="cp-scan" role="dialog" aria-modal="true" aria-labelledby="cp-scan-title">
+    <div class="cp-scan-head">
+      <div>
+        <h2 id="cp-scan-title">${t("cpScanTitle")}</h2>
+        <div class="cp-scan-sub">${tr(tower)} · ${t("floorLabel", level)}${next?`<br>${t("cpNext")}: <b>${escapeHtml(cpLabel(next))}</b>`:""}</div>
+      </div>
+      <button class="cp-x" id="cp-scan-close" aria-label="${t("close")}">${icon("x")}</button>
+    </div>
+    <div class="cp-reader-wrap"><div class="cp-reader" id="cp-reader-${session}"></div><div class="cp-reader-msg" id="cp-reader-msg">${t("cpStarting")}</div></div>
+    <div class="cp-scan-msg" id="cp-scan-msg" role="status" aria-live="polite"></div>
+    <p class="cp-scan-hint">${t("cpScanHint")}</p>
+    <button class="btn ghost cp-scan-cancel" id="cp-scan-cancel">${t("cancel")}</button>
+  </div>`, "#cp-scan-close");
+  root.querySelector("#cp-scan-close").addEventListener("click", closeCpOverlay);
+  root.querySelector("#cp-scan-cancel").addEventListener("click", closeCpOverlay);
+  cpScanStarting = true;
+  try{
+    if(!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ const e = new Error("insecure"); e.name = "InsecureContext"; throw e; }
+    try{ await loadLib("scanner"); }catch(e){ const err = new Error("library"); err.name = "LibFailed"; throw err; }
+    if(session !== cpScanSession) return;
+    const scanner = new Html5Qrcode(`cp-reader-${session}`, { formatsToSupport:[Html5QrcodeSupportedFormats.QR_CODE], useBarCodeDetectorIfSupported:true, verbose:false });
+    cpScanner = scanner; cpScannerView = `cp-reader-${session}`;
+    const started = scanner.start({ facingMode:"environment" },
+      { fps:10, qrbox:(w, h)=>{ const side = Math.max(150, Math.floor(Math.min(w, h) * 0.72)); return { width:side, height:side }; } },
+      text=>onCheckpointCode(text, session), ()=>{ /* no code in this frame */ });
+    cpStartPromise = started;
+    await started;
+    if(cpStartPromise === started) cpStartPromise = null;
+    if(session !== cpScanSession) return;   // closed while starting: stopScanner turns it off
+    const msg = document.getElementById("cp-reader-msg"); if(msg) msg.remove();
+  }catch(err){
+    if(session !== cpScanSession) return;
+    stopScanner();
+    const why = String((err && err.name) || "") + " " + String(err);
+    const msg = document.getElementById("cp-reader-msg");
+    if(msg) msg.textContent = /InsecureContext/.test(why) ? t("cpCamInsecure") : /LibFailed/.test(why) ? t("cpLibFailed")
+      : /NotAllowed|Permission|Security/i.test(why) ? t("cpCamBlocked")
+      : /NotFound|DevicesNotFound|Overconstrained/i.test(why) ? t("cpCamMissing")
+      : /NotReadable|TrackStart|AbortError/i.test(why) ? t("cpCamBusy") : t("cpCamFailed");
+  }finally{
+    if(session === cpScanSession) cpScanStarting = false;
+  }
+}
+function onCheckpointCode(text, session){
+  if(session !== cpScanSession || cpScanBusy) return;
+  const res = checkScannedCode(text);
+  if(!res.ok){
+    // wrong code: say why and keep the camera running
+    const now = Date.now();
+    if(text === cpLastBad.text && now - cpLastBad.at < 2500) return;   // the same code is still in view
+    cpLastBad = { text, at: now };
+    const box = document.getElementById("cp-scan-msg");
+    if(box) box.innerHTML = `<div class="m ${res.kind}">${res.message}</div>`;
+    return;
+  }
+  cpScanBusy = true;
+  const tower = state.tower, level = state.level;
+  const skipped = cpSkipped(cpList(tower, level), cpDone(cpKey(tower, level)), res.cp.id);
+  recordCheckpoint(res.cp, "Scanned", "");
+  if(navigator.vibrate){ try{ navigator.vibrate(60); }catch(e){ /* not on this phone */ } }
+  closeCpOverlay();
+  // straight to that place: the scan confirmed at the top, its open issues and the report form below
+  cpOpenArea(res.cp, { skipped, offline: !navigator.onLine });
+}
+function openMissedDialog(cp){
+  if(!state.patrol.sessionId || state.patrol.paused) return;
+  const tower = state.tower, level = state.level;
+  const root = showCpOverlay(`
+  <div class="cp-sheet-backdrop" id="cp-sheet-bg">
+    <form class="cp-sheet cp-miss-sheet" id="cp-miss-form" role="dialog" aria-modal="true" aria-labelledby="cp-miss-title" novalidate>
+      <h2 id="cp-miss-title">${t("cpMissTitle")}</h2>
+      <div class="cp-miss-cp"><span class="cp-id">${escapeHtml(cp.id)}</span>${escapeHtml(cpName(cp))}</div>
+      <div class="cp-ok-meta">${tr(tower)} · ${t("floorLabel", level)}</div>
+      <label class="cp-field-label" for="cp-miss-reason">${t("cpMissReason")}</label>
+      <textarea id="cp-miss-reason" maxlength="500" placeholder="${t("cpMissPlaceholder")}"></textarea>
+      <div class="cp-field-error" id="cp-miss-error" role="alert"></div>
+      <div class="cp-sheet-actions">
+        <button type="button" class="btn ghost" id="cp-miss-cancel">${t("cancel")}</button>
+        <button type="submit" class="btn cp-danger-btn" id="cp-miss-save">${t("cpMissSave")}</button>
+      </div>
+    </form>
+  </div>`, "#cp-miss-reason");
+  root.querySelector("#cp-miss-cancel").addEventListener("click", closeCpOverlay);
+  root.querySelector("#cp-miss-reason").addEventListener("input", ()=>{ root.querySelector("#cp-miss-error").textContent = ""; });
+  root.querySelector("#cp-miss-form").addEventListener("submit", e=>{
+    e.preventDefault();
+    const box = root.querySelector("#cp-miss-reason");
+    const reason = box.value.trim();
+    if(reason.length < 3){ root.querySelector("#cp-miss-error").textContent = t("cpMissNeedReason"); box.focus(); return; }
+    if(state.tower!==tower || state.level!==level || !state.patrol.sessionId){ closeCpOverlay(); return; }
+    recordCheckpoint(cp, "Missed", reason);
+    closeCpOverlay();
+    render();
+    toast(t("cpMissDone"));
+  });
+}
+document.addEventListener("visibilitychange", ()=>{
+  if(document.hidden){ if(cpScanner || cpScanStarting) closeCpOverlay(); }   // never leave the camera running in the background
+  else flushScanQueue();
+});
+
+/* ---- admin: printable QR labels, 8 per A4 page ---- */
+function towerName(code){ const tw = TOWERS.find(x=>x.cpCode===code); return tw ? tw.en : code; }
+function qrSvg(text){
+  const qr = qrcode(0, "Q");   // error correction Q: still reads with a quarter of the label scratched
+  qr.addData(text); qr.make();
+  const size = qr.getModuleCount(), quiet = 4, full = size + quiet * 2;
+  let d = "";
+  for(let r = 0; r < size; r++) for(let c = 0; c < size; c++) if(qr.isDark(r, c)) d += `M${c + quiet} ${r + quiet}h1v1h-1z`;
+  return `<svg viewBox="0 0 ${full} ${full}" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" role="img" aria-label="${escapeHtml(text)}"><rect width="${full}" height="${full}" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;
+}
+async function openQrPrint(){
+  if(!state.isAdmin) return;
+  const view = { loading:true, items:[], tower:"", level:"", ready:false, error:"" };
+  state.qrPrint = view;
+  go("qrprint");
+  const creds = state.token ? {} : { id: state.officer, password: state.legacyPassword };
+  const [res] = await Promise.all([
+    callScript("get-checkpoints", { all:true, ...creds }),
+    loadLib("qr").then(()=>{ view.ready = true; }).catch(()=>{ view.error = t("qrLibFailed"); }),
+  ]);
+  view.loading = false;
+  if(res.ok && res.data && Array.isArray(res.data.all)) view.items = res.data.all;
+  else if(!view.error) view.error = (res.data && res.data.error) || t("networkError");
+  if(state.screen==="qrprint" && state.qrPrint===view) render();
+}
+function renderQrPrint(){
+  const q = state.qrPrint || { loading:true, items:[], tower:"", level:"" };
+  const items = q.items || [];
+  const towers = [...new Set(items.map(c=>c.tower))];
+  const levels = [...new Set(items.filter(c=>!q.tower || c.tower===q.tower).map(c=>c.level))].sort((a, b)=>a - b);
+  const shown = items.filter(c=>(!q.tower || c.tower===q.tower) && (q.level==="" || q.level==null || c.level===Number(q.level)));
+  const pages = [];
+  for(let i = 0; i < shown.length; i += 8) pages.push(shown.slice(i, i + 8));
+  const status = q.loading ? t("qrLoading") : q.error ? escapeHtml(q.error) : !items.length ? t("qrNone") : t("qrCount", shown.length, pages.length);
+  return topbar(null) + `
+  <main class="qr-main">
+    <div class="no-print">
+      <div class="crumbs"><button class="crumb-link" data-jump="tower">${t("towerTitle")}</button><span class="sep">/</span><b>${t("qrTitle")}</b></div>
+      <div class="page-head"><div class="eyebrow">${t("qrEyebrow")}</div><h1>${t("qrTitle")}</h1><p>${t("qrSub")}</p></div>
+      <div class="qr-controls">
+        <label class="qr-filter"><span>${t("qrTower")}</span>
+          <select id="qr-tower"><option value="">${t("qrAll")}</option>${towers.map(x=>`<option value="${escapeHtml(x)}" ${q.tower===x?"selected":""}>${escapeHtml(towerName(x))}</option>`).join("")}</select></label>
+        <label class="qr-filter"><span>${t("qrLevel")}</span>
+          <select id="qr-level"><option value="">${t("qrAll")}</option>${levels.map(l=>`<option value="${l}" ${String(q.level)===String(l)?"selected":""}>${t("floorLabel", l)}</option>`).join("")}</select></label>
+        <button class="btn qr-print-btn" id="btn-qr-print-now" ${shown.length && q.ready ? "" : "disabled"}>${t("qrPrintBtn")}</button>
+      </div>
+      <div class="qr-count" role="status">${status}</div>
+    </div>
+    ${q.ready ? `<div class="qr-pages">${pages.map(p=>`
+      <section class="qr-page">${p.map(c=>`
+        <div class="qr-label">
+          <div class="qr-code">${qrSvg(c.code)}</div>
+          <div class="qr-text">
+            <div class="qr-name">${escapeHtml(c.name)}</div>
+            ${c.ar && c.ar!==c.name ? `<div class="qr-name-ar" dir="rtl" lang="ar">${escapeHtml(c.ar)}</div>` : ""}
+            <div class="qr-where">${escapeHtml(towerName(c.tower))} · Level ${c.level}${c.order < 1000 ? ` · #${c.order}` : ""}</div>
+            <div class="qr-raw">${escapeHtml(c.code)}</div>
+          </div>
+        </div>`).join("")}
+      </section>`).join("")}</div>` : ""}
+  </main>`;
+}
+
+/* ============================================================
    PATROL TIMER — pause/resume, logged to the Patrol Timer Log sheet.
    The visible clock updates on its own 1-second tick so it doesn't need
    a full screen re-render just to keep counting.
    ============================================================ */
 function startPatrolSession(){
   state.patrol = { sessionId: "PAT-"+Date.now(), startedAt: Date.now(), paused:false, lastPauseAt:null, pausedMs:0 };
+  state.cpLog = {}; state.cpBlocked = null; state.cpSubmitBlocked = false; state.cpArea = null;   // a new patrol starts with no checkpoints done
   callScript("log-patrol-event", { officer: state.officer, sessionId: state.patrol.sessionId, event:"Start", timestamp: new Date().toISOString() });
 }
 function togglePatrolPause(){
@@ -624,6 +1362,60 @@ const STR = {
     offlineSaved:"Saved on this device", offlineSavedBody:n=>`${n} item${n===1?'':'s'} saved offline for Officer ${state.officer}. They'll send automatically once you're back online — don't close this out until you see the connection restored.`,
     offlineFlushed:n=>`${n} offline item${n===1?'':'s'} just sent to the spreadsheet.`,
     addVideo:"Add video", chooseFile:"Choose from device", videoLabel:"Video",
+    prevLevel:n=>`Previous: Level ${n}`, stillConnecting:"Still connecting…",
+    cpLevelTitle:"Scan the checkpoints", cpLevelSub:"Scan each checkpoint when you reach it — that place's open issues and the report form open straight after the scan.",
+    cpShowAll:n=>`Show all ${n} checkpoints`, cpHideAll:"Hide the list", cpOpenHere:"Open this place",
+    cpOpenLine:n=>`${n} open issue${n===1?'':'s'} on this level — tap to see ${n===1?'it':'them'}`,
+    cpHideOpen:"Hide the open issues", cpOtherPlace:"Report an issue somewhere else on this level",
+    cpAreaTitle:"Anything wrong here?", cpAreaSub:"Pick what you're checking to report it. All fine? Scan the next checkpoint.",
+    cpAreaOpen:"Open issues here", cpBackToLevel:n=>`Back to Level ${n}`,
+    cpTitle:"Checkpoints", cpScanBtn:"Scan Checkpoint", cpNext:"Next",
+    cpPausedHint:"Resume the patrol to scan checkpoints.",
+    cpNotScanned:"Not scanned yet", cpNotScannedYet:"Not scanned — scan it or mark it missed",
+    cpSkippedRow:"Skipped — scan it or mark it missed",
+    cpScannedAt:x=>`Scanned ${x}`, cpMissedAt:x=>`Marked missed ${x}`,
+    cpWaiting:"waiting to send", cpMarkMissed:"Mark missed",
+    cpBlocked:"Scan the checkpoints in red, or mark them missed with a reason, before you leave this level.",
+    cpBlockedToast:n=>`${n} checkpoint${n===1?'':'s'} not scanned on this level`,
+    cpSubmitBlocked:"Some levels still have checkpoints that weren't scanned (in red). Go back and scan them, or mark them missed with a reason.",
+    cpSubmitBlockedToast:"Checkpoints are missing — see the list in red",
+    cpScanTitle:"Scan Checkpoint", cpStarting:"Starting the camera…",
+    cpScanHint:"Hold the phone 15–30 cm from the checkpoint's QR code.",
+    cpNotFls:"This isn't an FLS checkpoint QR code.",
+    cpWrongPlace:(tw,l,ctw,cl)=>`This checkpoint is on ${tw} · Level ${l}. You're on ${ctw} · Level ${cl}.`,
+    cpUnknown:(id,l)=>`${id} isn't on the checkpoint list for Level ${l}.`,
+    cpAlready:(name,x)=>`${name} was already scanned at ${x}.`,
+    cpScannedOk:"Checkpoint scanned", cpOutOfOrder:"Out of order.", cpSkippedList:"You skipped:",
+    cpGoBackHint:n=> n>1 ? "Scan them on your way back, or mark them missed." : "Scan it on your way back, or mark it missed.",
+    cpSavedOffline:"No connection — saved on this phone with its scan time. It sends automatically when you're back online.",
+    cpProgress:(a,b)=>`${a} of ${b} checkpoints done on this level`,
+    cpLevelDone:(n,l)=>`All ${n} checkpoints done on Level ${l}`,
+    cpScanNext:"Scan next",
+    cpMissTitle:"Mark as missed", cpMissReason:"Why couldn't you scan it? (required)",
+    cpMissPlaceholder:"e.g. Room locked — no key at the control room.", cpMissSave:"Mark Missed",
+    cpMissNeedReason:"Write a short reason (at least 3 letters).", cpMissDone:"Marked as missed",
+    cpCamBlocked:"The camera is blocked. Allow camera access for this site in the browser settings, then try again.",
+    cpCamMissing:"No camera found on this device.",
+    cpCamInsecure:"The camera only works on the secure (https) link of the app.",
+    cpCamBusy:"Another app is using the camera. Close it and try again.",
+    cpCamFailed:"The camera couldn't start. Close other apps that use it and try again.",
+    cpLibFailed:"The scanner couldn't load. Check the connection and try again.",
+    cpRefused:(n,why)=>`${n} checkpoint scan${n===1?' was':'s were'} not accepted: ${why}`,
+    cpSumCounts:(s,n,m)=>`${s} of ${n} scanned${m?` · ${m} missed`:""}`,
+    cpSumMissing:"Not scanned yet:", cpSumMissed:"Marked missed:",
+    cpGoTo:l=>`Go to Level ${l}`,
+    cpLevelCount:(a,b)=>`${a}/${b} checkpoints`, cpLevelHas:n=>`${n} checkpoints`,
+    cpFinishPatrol:"Finish Patrol", cpFinishConfirm:"Finish this patrol? No issues were logged.",
+    cpNoIssues:"No issues logged this round.",
+    cpFinishedTitle:"Patrol Finished", cpFinishedBody:"No issues were reported this round.",
+    cpSuccessLine:(s,m)=>`Checkpoints: ${s} scanned${m?` · ${m} missed`:""}`,
+    cpSuccessWaiting:n=>`${n} still on this phone — ${n===1?'it sends':'they send'} automatically when there's a connection.`,
+    cpLogoutWaiting:n=>`${n} checkpoint scan${n===1?' is':'s are'} still waiting to send — ${n===1?'it':'they'} will send the next time you sign in on this phone.`,
+    qrPrintLink:"Print checkpoint QR codes", qrEyebrow:"Admin", qrTitle:"Checkpoint QR Codes",
+    qrSub:"8 labels per A4 page. Pick a tower and level, print, and stick each label at its checkpoint.",
+    qrTower:"Tower", qrLevel:"Level", qrAll:"All", qrPrintBtn:"Print",
+    qrLoading:"Loading checkpoints…", qrCount:(n,p)=>`${n} QR code${n===1?'':'s'} · ${p} page${p===1?'':'s'}`,
+    qrNone:"No checkpoints on the Checkpoints tab yet.", qrLibFailed:"The QR code maker couldn't load. Check the connection and try again.",
   },
   ar: {
     brandTitle:"مركز قيادة السلامة", brandSub:"كورنثيا طرابلس",
@@ -686,6 +1478,60 @@ const STR = {
     offlineSaved:"تم الحفظ على هذا الجهاز", offlineSavedBody:n=>`تم حفظ ${n} عنصر دون اتصال للموظف ${state.officer}. سيتم إرسالها تلقائيًا عند عودة الاتصال — لا تغلق التطبيق حتى تعود الشبكة.`,
     offlineFlushed:n=>`تم للتو إرسال ${n} عنصر محفوظ دون اتصال إلى الجدول.`,
     addVideo:"إضافة فيديو", chooseFile:"اختيار من الجهاز", videoLabel:"فيديو",
+    prevLevel:n=>`السابق: الطابق ${n}`, stillConnecting:"لا يزال الاتصال جاريًا…",
+    cpLevelTitle:"امسح نقاط التفتيش", cpLevelSub:"امسح كل نقطة عند وصولك إليها — تظهر المشاكل المفتوحة في ذلك المكان ونموذج الإبلاغ مباشرة بعد المسح.",
+    cpShowAll:n=>`عرض كل نقاط التفتيش (${n})`, cpHideAll:"إخفاء القائمة", cpOpenHere:"فتح هذا المكان",
+    cpOpenLine:n=>`${n} من المشاكل المفتوحة في هذا الطابق — اضغط لعرضها`,
+    cpHideOpen:"إخفاء المشاكل المفتوحة", cpOtherPlace:"الإبلاغ عن مشكلة في مكان آخر من هذا الطابق",
+    cpAreaTitle:"هل يوجد خلل هنا؟", cpAreaSub:"اختر ما تفحصه للإبلاغ عنه. كل شيء سليم؟ امسح نقطة التفتيش التالية.",
+    cpAreaOpen:"مشاكل مفتوحة هنا", cpBackToLevel:n=>`العودة إلى الطابق ${n}`,
+    cpTitle:"نقاط التفتيش", cpScanBtn:"مسح نقطة تفتيش", cpNext:"التالية",
+    cpPausedHint:"استأنف الجولة لمسح نقاط التفتيش.",
+    cpNotScanned:"لم تُمسح بعد", cpNotScannedYet:"لم تُمسح — امسحها أو سجّلها كنقطة فائتة",
+    cpSkippedRow:"تم تخطيها — امسحها أو سجّلها كنقطة فائتة",
+    cpScannedAt:x=>`تم المسح ${x}`, cpMissedAt:x=>`سُجّلت كفائتة ${x}`,
+    cpWaiting:"بانتظار الإرسال", cpMarkMissed:"تسجيل كفائتة",
+    cpBlocked:"امسح نقاط التفتيش المظللة بالأحمر، أو سجّلها كنقاط فائتة مع ذكر السبب، قبل مغادرة هذا الطابق.",
+    cpBlockedToast:n=>`${n} من نقاط التفتيش لم تُمسح في هذا الطابق`,
+    cpSubmitBlocked:"بعض الطوابق فيها نقاط تفتيش لم تُمسح (بالأحمر). ارجع وامسحها، أو سجّلها كنقاط فائتة مع ذكر السبب.",
+    cpSubmitBlockedToast:"توجد نقاط تفتيش ناقصة — راجع القائمة بالأحمر",
+    cpScanTitle:"مسح نقطة تفتيش", cpStarting:"جارٍ تشغيل الكاميرا…",
+    cpScanHint:"أمسك الهاتف على بعد 15–30 سم من رمز QR الخاص بنقطة التفتيش.",
+    cpNotFls:"هذا ليس رمز QR لنقطة تفتيش FLS.",
+    cpWrongPlace:(tw,l,ctw,cl)=>`هذه النقطة في ${tw} · الطابق ${l}. أنت الآن في ${ctw} · الطابق ${cl}.`,
+    cpUnknown:(id,l)=>`${id} غير موجودة في قائمة نقاط التفتيش للطابق ${l}.`,
+    cpAlready:(name,x)=>`${name} تم مسحها بالفعل الساعة ${x}.`,
+    cpScannedOk:"تم مسح نقطة التفتيش", cpOutOfOrder:"خارج الترتيب.", cpSkippedList:"لقد تخطيت:",
+    cpGoBackHint:n=> n>1 ? "امسحها في طريق عودتك، أو سجّلها كنقاط فائتة." : "امسحها في طريق عودتك، أو سجّلها كنقطة فائتة.",
+    cpSavedOffline:"لا يوجد اتصال — تم الحفظ على هذا الهاتف مع وقت المسح، وسيُرسل تلقائيًا عند عودة الاتصال.",
+    cpProgress:(a,b)=>`تم إنجاز ${a} من ${b} من نقاط التفتيش في هذا الطابق`,
+    cpLevelDone:(n,l)=>`تم إنجاز كل نقاط التفتيش (${n}) في الطابق ${l}`,
+    cpScanNext:"مسح التالية",
+    cpMissTitle:"تسجيل كنقطة فائتة", cpMissReason:"لماذا لم تتمكن من مسحها؟ (مطلوب)",
+    cpMissPlaceholder:"مثال: الغرفة مقفلة — لا يوجد مفتاح في غرفة التحكم.", cpMissSave:"تسجيل كفائتة",
+    cpMissNeedReason:"اكتب سببًا قصيرًا (3 أحرف على الأقل).", cpMissDone:"تم التسجيل كنقطة فائتة",
+    cpCamBlocked:"الكاميرا محظورة. اسمح بالوصول إلى الكاميرا لهذا الموقع من إعدادات المتصفح ثم حاول مرة أخرى.",
+    cpCamMissing:"لا توجد كاميرا على هذا الجهاز.",
+    cpCamInsecure:"تعمل الكاميرا فقط عبر الرابط الآمن (https) للتطبيق.",
+    cpCamBusy:"تطبيق آخر يستخدم الكاميرا. أغلقه ثم حاول مرة أخرى.",
+    cpCamFailed:"تعذّر تشغيل الكاميرا. أغلق التطبيقات الأخرى التي تستخدمها ثم حاول مرة أخرى.",
+    cpLibFailed:"تعذّر تحميل الماسح. تحقق من الاتصال ثم حاول مرة أخرى.",
+    cpRefused:(n,why)=>`لم يُقبل ${n} من مسوحات نقاط التفتيش: ${why}`,
+    cpSumCounts:(s,n,m)=>`تم مسح ${s} من ${n}${m?` · ${m} فائتة`:""}`,
+    cpSumMissing:"لم تُمسح بعد:", cpSumMissed:"سُجّلت كفائتة:",
+    cpGoTo:l=>`الذهاب إلى الطابق ${l}`,
+    cpLevelCount:(a,b)=>`${a}/${b} من نقاط التفتيش`, cpLevelHas:n=>`${n} من نقاط التفتيش`,
+    cpFinishPatrol:"إنهاء الجولة", cpFinishConfirm:"إنهاء هذه الجولة؟ لم يتم تسجيل أي مشكلة.",
+    cpNoIssues:"لم يتم تسجيل أي مشكلة في هذه الجولة.",
+    cpFinishedTitle:"انتهت الجولة", cpFinishedBody:"لم يتم الإبلاغ عن أي مشكلة في هذه الجولة.",
+    cpSuccessLine:(s,m)=>`نقاط التفتيش: ${s} ممسوحة${m?` · ${m} فائتة`:""}`,
+    cpSuccessWaiting:n=>`${n} لا تزال على هذا الهاتف — ستُرسل تلقائيًا عند توفر الاتصال.`,
+    cpLogoutWaiting:n=>`${n} من مسوحات نقاط التفتيش لم تُرسل بعد — ستُرسل عند تسجيل دخولك التالي على هذا الهاتف.`,
+    qrPrintLink:"طباعة رموز QR لنقاط التفتيش", qrEyebrow:"المشرف", qrTitle:"رموز QR لنقاط التفتيش",
+    qrSub:"8 ملصقات في كل صفحة A4. اختر البرج والطابق، ثم اطبع وألصق كل ملصق عند نقطة التفتيش الخاصة به.",
+    qrTower:"البرج", qrLevel:"الطابق", qrAll:"الكل", qrPrintBtn:"طباعة",
+    qrLoading:"جارٍ تحميل نقاط التفتيش…", qrCount:(n,p)=>`${n} رمز QR · ${p} صفحة`,
+    qrNone:"لا توجد نقاط تفتيش في تبويب Checkpoints بعد.", qrLibFailed:"تعذّر تحميل أداة إنشاء رموز QR. تحقق من الاتصال ثم حاول مرة أخرى.",
   }
 };
 function t(key,...args){ const v = STR[state.lang][key]; return typeof v==="function" ? v(...args) : v; }
@@ -718,6 +1564,7 @@ const ICONS = {
   video:`<rect x="3" y="6" width="12" height="12" rx="2"/><path d="m15 10 6-3v10l-6-3"/>`,
   folder:`<path d="M3 7a1 1 0 0 1 1-1h4l2 2h9a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7Z"/>`,
   alert:`<path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/>`,
+  qr:`<rect x="3.5" y="3.5" width="6" height="6" rx="1"/><rect x="14.5" y="3.5" width="6" height="6" rx="1"/><rect x="3.5" y="14.5" width="6" height="6" rx="1"/><path d="M14.5 14.5h2.5v2.5M20.5 14.5v.01M14.5 20.5h.01M17.5 20.5h3v-3"/>`,
 };
 function icon(name, extra=""){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" ${extra}>${ICONS[name]||""}</svg>`; }
 const COLUMN_MARK = `<svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
@@ -736,6 +1583,9 @@ let state = {
   pendingIssues:[], pendingLoading:false, viewingIssue:null,
   isOnline: (typeof navigator!=="undefined" ? navigator.onLine : true),
   lastQueuedOffline:0, offlineSuccess:false,
+  // QR checkpoints (v7 sheet script): lists per "T1|5", this patrol's scans, admin print page
+  checkpoints:null, cpLog:{}, cpBlocked:null, cpSubmitBlocked:false, lastCp:null, isAdmin:false, officerName:"", qrPrint:null,
+  cpArea:null, cpShowList:false, cpShowGrid:false, cpShowPending:false,
 };
 
 function toast(msg, warn){
@@ -747,7 +1597,7 @@ function toast(msg, warn){
   window.__toastTimer = setTimeout(()=>el.classList.remove("show"), 2600);
 }
 function go(screen){ state.screen = screen; render(); window.scrollTo({top:0,behavior:"instant"}); }
-function canGoBack(){ return ["tower","level","location","category","assets","form","summary"].includes(state.screen); }
+function canGoBack(){ return ["tower","level","location","category","assets","form","summary","qrprint"].includes(state.screen); }
 function goBack(){
   switch(state.screen){
     case "tower": go("login"); break;
@@ -757,6 +1607,7 @@ function goBack(){
     case "assets": go("category"); break;
     case "form": go(getAssets(state.tower.id,state.level,state.activeCategory) ? "assets" : categoriesFor(state.tower).length===1 ? "location" : "category"); break;
     case "summary": go(state.location?"category":state.level!=null?"location":state.tower?"level":"tower"); break;
+    case "qrprint": go("tower"); break;
     default: break;
   }
 }
@@ -765,12 +1616,14 @@ function goBack(){
 // the Level grid each time.
 async function selectLevel(n){
   state.level = n;
+  state.cpArea = null; state.cpShowList = false; state.cpShowGrid = false; state.cpShowPending = false;
   state.locationFilter = "";
   go("location");
   state.pendingLoading = true; state.pendingIssues = [];
   if(state.screen==="location") render();
   const tower = state.tower;
   loadAreaLocations(tower).then(()=>{ if(state.screen==="location" && state.tower===tower) render(); });
+  refreshCheckpoints(tower, n);
   const { ok, data } = await callScript("pending-issues", { tower: tower.en, floor: state.level });
   state.pendingLoading = false;
   state.pendingIssues = (ok && data.pending) ? data.pending : [];
@@ -783,10 +1636,11 @@ function render(){
   setTimeout(translateVisibleNotes, 0);
   document.documentElement.dir = state.lang==="ar" ? "rtl" : "ltr";
   document.documentElement.lang = state.lang;
+  document.documentElement.classList.toggle("on-qrprint", state.screen==="qrprint");
   document.getElementById("app").innerHTML = ({
     login: renderLogin, tower: renderTower, level: renderLevel,
     location: renderLocation, category: renderCategory, assets: renderAssets, form: renderForm,
-    summary: renderSummary, success: renderSuccess,
+    summary: renderSummary, success: renderSuccess, qrprint: renderQrPrint,
   })[state.screen]() + renderIssueDetailModal();
   bindEvents();
 }
@@ -815,7 +1669,7 @@ function topbar(stepIndex, stepTotal){
   ${stepIndex!=null?`<div class="progress-rail">${Array.from({length:stepTotal}).map((_,i)=>`<div class="seg ${i<stepIndex?'done':i===stepIndex?'active':''}"><i></i></div>`).join("")}</div>`:""}`;
 }
 function reviewFab(){
-  if(["login","register","success"].includes(state.screen)) return "";
+  if(["login","register","success","qrprint"].includes(state.screen)) return "";
   const n = state.reports.length;
   // always tappable, even at 0 — opens the review screen either way so it's
   // obvious how to check what's been logged, instead of looking dead/greyed out
@@ -863,11 +1717,12 @@ function renderTower(){
         <div><div class="name">${tr(tw)}</div><div class="meta">${tw.singleLevel ? (tw.meta ? tr(tw.meta) : t("areaMeta")) : t("towerFloors",tw.floors-2)}</div></div>
         <div class="chev">${icon("chevron")}</div>
       </button>`).join("")}
+    ${state.isAdmin ? `<button class="admin-link" id="btn-qr-print">${icon("qr")} ${t("qrPrintLink")}</button>` : ""}
   </main>` + reviewFab();
 }
 
 function renderLevel(){
-  const floors = Array.from({length: state.tower.floors-2}, (_,i)=>i+3);
+  const floors = Array.from({length: state.tower.floors-FIRST_TOWER_FLOOR+1}, (_,i)=>i+FIRST_TOWER_FLOOR);
   return topbar(1,4) + `
   <main>
     ${crumbTrail({tower:"current"})}
@@ -875,22 +1730,24 @@ function renderLevel(){
     <div class="row-list">
       ${floors.map(n=>`
         <button class="row-tile ${state.level===n?'current':''}" data-level="${n}">
-          <div class="left"><div class="num">${String(n).padStart(2,"0")}</div><div class="label">${t("floorLabel",n)}</div></div>
+          <div class="left"><div class="num">${String(n).padStart(2,"0")}</div><div><div class="label">${t("floorLabel",n)}</div>${cpLevelLine(n)}</div></div>
           <div class="chev">${icon("chevron")}</div>
         </button>`).join("")}
     </div>
   </main>` + reviewFab();
 }
 
-function renderPendingPanel(){
+// open issues of the whole level — or (v7) only those of one place
+function renderPendingPanel(list, title){
+  list = list || state.pendingIssues; title = title || t("pendingTitle");
   if(state.pendingLoading){
-    return `<div class="pending-panel"><div class="pending-head">${icon("alert",'style="width:15px;height:15px"')} ${t("pendingTitle")}</div><div class="pending-loading">${t("pendingLoading")}</div></div>`;
+    return `<div class="pending-panel"><div class="pending-head">${icon("alert",'style="width:15px;height:15px"')} ${title}</div><div class="pending-loading">${t("pendingLoading")}</div></div>`;
   }
-  if(!state.pendingIssues.length) return "";
+  if(!list.length) return "";
   return `
   <div class="pending-panel">
-    <div class="pending-head">${icon("alert",'style="width:15px;height:15px"')} ${t("pendingTitle")} <span class="pending-count">${state.pendingIssues.length}</span></div>
-    ${state.pendingIssues.map(p=>{
+    <div class="pending-head">${icon("alert",'style="width:15px;height:15px"')} ${title} <span class="pending-count">${list.length}</span></div>
+    ${list.map(p=>{
       const cat = CATEGORIES.find(c=>c.id===p.category);
       const checkedNote = p.lastCheckedBy ? t("lastChecked", p.lastCheckedBy, p.lastCheckedAt ? new Date(p.lastCheckedAt).toLocaleString() : "") : "";
       return `
@@ -931,34 +1788,50 @@ function renderAreaLocation(){
 
 function renderLocation(){
   if(state.tower.singleLevel) return renderAreaLocation();
+  // the arrows stay inside this tower: no Previous on its lowest level, no Next on its top one
   const hasNextLevel = state.level < state.tower.floors;
-  return topbar(2,4) + `
-  <main>
-    ${crumbTrail({tower:"link", floor:"current"})}
-    <div class="page-head"><div class="eyebrow">${t("stepOf",3,4)}</div><h1>${t("locationTitle")}</h1><p>${t("locationSub")}</p></div>
-    ${renderPendingPanel()}
+  const hasPrevLevel = state.level > FIRST_TOWER_FLOOR;
+  // a level with QR checkpoints is led by the scans (each scan opens its place),
+  // so it only shows the checkpoints; the open issues and the place grid fold away
+  const scanLevel = cpList(state.tower, state.level).length > 0;
+  const grid = `
     <div class="grid">
       ${LOCATIONS.map(loc=>`
         <button class="tile" data-location="${loc.id}">
           <div class="ic">${icon("frame")}</div>
           <div><div class="name">${tr(loc)}</div><div class="meta">${t("floorLabel",state.level)}</div></div>
         </button>`).join("")}
-    </div>
-    ${hasNextLevel ? `
-    <div class="assets-foot" style="justify-content:center">
-      <button class="btn ghost" id="btn-next-level">${t("nextLevel", state.level+1)} ${icon("chevron")}</button>
-    </div>` : `<div class="hint-line" style="text-align:center;margin-top:16px">${t("topOfTower")}</div>`}
+    </div>`;
+  return topbar(2,4) + `
+  <main>
+    ${crumbTrail({tower:"link", floor:"current"})}
+    <div class="page-head"><div class="eyebrow">${t("stepOf",3,4)}</div><h1>${scanLevel ? t("cpLevelTitle") : t("locationTitle")}</h1><p>${scanLevel ? t("cpLevelSub") : t("locationSub")}</p></div>
+    ${scanLevel ? `
+    ${renderCheckpointPanel()}
+    ${renderLevelIssues()}
+    <button class="cp-toggle cp-other ${state.cpShowGrid?'open':''}" id="btn-cp-other" aria-expanded="${!!state.cpShowGrid}">${t("cpOtherPlace")} ${icon("chevron")}</button>
+    ${state.cpShowGrid ? grid : ""}` : `
+    ${renderPendingPanel()}
+    ${grid}`}
+    ${hasPrevLevel || hasNextLevel ? `
+    <div class="level-nav">
+      ${hasPrevLevel ? `<button class="btn ghost level-nav-btn" id="btn-prev-level">${icon("chevron",'class="flip"')} ${t("prevLevel", state.level-1)}</button>` : ""}
+      ${hasNextLevel ? `<button class="btn ghost level-nav-btn" id="btn-next-level">${t("nextLevel", state.level+1)} ${icon("chevron")}</button>` : ""}
+    </div>` : ""}
+    ${hasNextLevel ? "" : `<div class="hint-line level-top-hint">${t("topOfTower")}</div>`}
   </main>` + reviewFab();
 }
 
 function renderCategory(){
   const counts = {};
   state.reports.forEach(r=>{ if(r.towerId===state.tower.id && r.level===state.level && r.locationId===state.location.id) counts[r.category] = (counts[r.category]||0)+1; });
+  const area = cpAreaHere();   // opened by scanning this place's checkpoint
   return topbar(3,4) + `
   <main>
     ${crumbTrail({tower:"link", floor:"link", location:"current"})}
-    ${state.tower.singleLevel ? "" : `<div class="hint-line">${t("changeFloor")}</div>`}
-    <div class="page-head"><div class="eyebrow">${t("stepOf",4,4)}</div><h1>${t("categoryTitle")}</h1><p>${t("categorySub")}</p></div>
+    ${area ? renderScannedBanner(area) : state.tower.singleLevel ? "" : `<div class="hint-line">${t("changeFloor")}</div>`}
+    ${area ? renderPendingPanel(state.pendingIssues.filter(p=>p.location===state.location.id), t("cpAreaOpen")) : ""}
+    <div class="page-head"><div class="eyebrow">${t("stepOf",4,4)}</div><h1>${area ? t("cpAreaTitle") : t("categoryTitle")}</h1><p>${area ? t("cpAreaSub") : t("categorySub")}</p></div>
     <div class="grid">
       ${categoriesFor(state.tower).map(c=>`
         <button class="tile" data-category="${c.id}">
@@ -1089,7 +1962,8 @@ function renderSummary(){
   <main>
     <div class="crumbs"><b>${t("crumbContinue")}</b></div>
     <div class="page-head"><div class="eyebrow">${t("reviewEyebrow")}</div><h1>${t("summaryTitle")}</h1><p>${t("summarySub", state.reports.length)}</p></div>
-    ${keys.length===0? `<div class="empty-state">${icon("empty")}<p>${t("emptyLogged")}</p></div>`
+    ${renderCheckpointSummary()}
+    ${keys.length===0? (cpPatrolLevels().length ? `<p class="hint-line cp-no-issues">${t("cpNoIssues")}</p>` : `<div class="empty-state">${icon("empty")}<p>${t("emptyLogged")}</p></div>`)
     : keys.map(k=>`
       <div class="group-label">${k}</div>
       ${groups[k].map(r=>{
@@ -1110,18 +1984,24 @@ function renderSummary(){
         </div>`;
       }).join("")}
     `).join("")}
-    ${keys.length? `<button class="btn" id="btn-final-submit" ${state.sending?'disabled':''} style="margin-top:14px">${state.sending?`<span class="spinner"></span> ${t("sending")}`:t("confirmSend")}</button>`:""}
+    ${keys.length? `<button class="btn" id="btn-final-submit" ${state.sending?'disabled':''} style="margin-top:14px">${state.sending?`<span class="spinner"></span> ${t("sending")}`:t("confirmSend")}</button>`
+      : cpPatrolLevels().length ? `<button class="btn cp-finish-btn" id="btn-finish-patrol">${t("cpFinishPatrol")}</button>` : ""}
   </main>`;
 }
 
 function renderSuccess(){
   const stamp = new Date();
   const offline = !!state.offlineSuccess;
+  const cp = state.lastCp && (state.lastCp.scanned || state.lastCp.missed) ? state.lastCp : null;
+  const cpOnly = !offline && !state.lastSaved && !!cp;   // a patrol with checkpoints but no issues
+  const cpWaiting = cp ? myWaitingScans().length : 0;
   return `
   <div class="success-wrap"><div>
     <div class="success-ring ${offline?'offline-ring':''}">${icon(offline?"wifiOff":"check")}</div>
-    <h1 class="serif">${offline?t("offlineSaved"):t("successTitle")}</h1>
-    <p>${offline?t("offlineSavedBody", state.lastSaved):t("successBody", state.lastSaved, state.officer)}</p>
+    <h1 class="serif">${offline?t("offlineSaved"):cpOnly?t("cpFinishedTitle"):t("successTitle")}</h1>
+    <p>${offline?t("offlineSavedBody", state.lastSaved):cpOnly?t("cpFinishedBody"):t("successBody", state.lastSaved, state.officer)}</p>
+    ${cp?`<div class="cp-success-line">${t("cpSuccessLine", cp.scanned, cp.missed)}</div>`:""}
+    ${cpWaiting?`<div class="skip-note">${t("cpSuccessWaiting", cpWaiting)}</div>`:""}
     ${state.lastSkipped>0?`<div class="skip-note">${t("skipNote", state.lastSkipped)}</div>`:""}
     <button class="btn brass" id="btn-new-patrol">${t("startAnother")}</button>
     <div class="ticket">${stamp.toLocaleDateString()} · ${stamp.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>
@@ -1229,6 +2109,18 @@ function renderIssueDetailModal(){
    ============================================================ */
 // Total patrol time = now minus start, minus every pause (including one
 // that's still active right now).
+// v7: the same patrol always gets the same ID (from its reports, which each have
+// their own), so the sheet saves it once even when it's sent again: a retry after a
+// slow answer, or the copy kept offline. A patrol that was changed gets a new ID.
+function submitIdFor(reports){
+  const key = [state.officer, state.patrol.sessionId || "", ...reports.map(r=>r.id)].join("|");
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  for(let i=0;i<key.length;i++){ const c = key.charCodeAt(i); h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677); }
+  h1 = Math.imul(h1 ^ (h1>>>16), 2246822507) ^ Math.imul(h2 ^ (h2>>>13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2>>>16), 2246822507) ^ Math.imul(h1 ^ (h1>>>13), 3266489909);
+  return "SUB-" + state.officer + "-" + (h2>>>0).toString(36) + (h1>>>0).toString(36);
+}
+
 function patrolTotals(){
   const p = state.patrol;
   const activePauseMs = p.paused ? (Date.now() - p.lastPauseAt) : 0;
@@ -1257,8 +2149,10 @@ function endPatrol(event, { beacon=false }={}){
 window.addEventListener("pagehide", ()=>{ if(state.officer) endPatrol("Closed", { beacon:true }); });
 
 function confirmAndLogout(){
-  const logoutMsg = state.reports.length ? t("logoutConfirm") : t("logoutConfirmSimple");
+  const waitingScans = myWaitingScans().length;
+  const logoutMsg = (state.reports.length ? t("logoutConfirm") : t("logoutConfirmSimple")) + (waitingScans ? "\n\n" + t("cpLogoutWaiting", waitingScans) : "");
   if(!confirm(logoutMsg)) return false;
+  if(cpOverlayOpen()) closeCpOverlay();
   const totals = endPatrol("Logout");
   if(totals){
     const { totalDurationMs, totalPausedMs } = totals;
@@ -1266,7 +2160,7 @@ function confirmAndLogout(){
       ? t("logoutSummaryPaused", formatDuration(totalDurationMs), formatDuration(totalPausedMs))
       : t("logoutSummary", formatDuration(totalDurationMs)));
   }
-  state = {screen:"login", lang:state.lang, officer:null, loginError:"", registerError:"", registerNote:"", tower:null, level:null, location:null, activeCategory:null, selectedAssets:[], reportedTags:[], reportedIssues:[], checkingAssets:false, draft:{text:"",media:[],risk:DEFAULT_RISK}, reports:[], sending:false, lastSkipped:0, lastSaved:0, patrol:{sessionId:null,startedAt:null,paused:false,lastPauseAt:null,pausedMs:0}, pendingIssues:[], pendingLoading:false, viewingIssue:null, isOnline:state.isOnline, lastQueuedOffline:0, offlineSuccess:false};
+  state = {screen:"login", lang:state.lang, officer:null, loginError:"", registerError:"", registerNote:"", tower:null, level:null, location:null, activeCategory:null, selectedAssets:[], reportedTags:[], reportedIssues:[], checkingAssets:false, draft:{text:"",media:[],risk:DEFAULT_RISK}, reports:[], sending:false, lastSkipped:0, lastSaved:0, patrol:{sessionId:null,startedAt:null,paused:false,lastPauseAt:null,pausedMs:0}, pendingIssues:[], pendingLoading:false, viewingIssue:null, isOnline:state.isOnline, lastQueuedOffline:0, offlineSuccess:false, token:null, areaLocations:{}, locationFilter:"", checkpoints:null, cpLog:{}, cpBlocked:null, cpSubmitBlocked:false, lastCp:null, isAdmin:false, officerName:"", qrPrint:null, cpArea:null, cpShowList:false, cpShowGrid:false, cpShowPending:false};
   render();
   return true;
 }
@@ -1287,10 +2181,24 @@ function bindEvents(){
       e.preventDefault();
       const id = $("#in-id").value.trim(); const pw = $("#in-pw").value;
       const btn = $("#btn-login-submit"); btn.disabled = true; btn.innerHTML = `<span class="spinner"></span>`;
-      const { ok, data } = await callScript("login", { id, password: pw });
-      if(ok){ state.officer = id; state.token = data.token || null; state.legacyPassword = state.token ? null : pw; state.loginError=""; state.registerNote=""; preloadPlaces(data.places); go("tower"); flushOfflineQueue(); }
-      else { state.loginError = (data && data.error) || t("loginErrorMsg"); render(); $("#in-pw").focus(); }
+      // after a few seconds say it's still working; a request that stalls is tried once more
+      const slow = setTimeout(()=>{ if(btn.isConnected) btn.innerHTML = `<span class="spinner"></span> ${t("stillConnecting")}`; }, 6000);
+      let res = await callScript("login", { id, password: pw });
+      if(res.data && res.data.timedOut) res = await callScript("login", { id, password: pw });
+      clearTimeout(slow);
+      const { ok, data } = res;
+      if(ok && data && data.ok === true){
+        state.officer = id; state.token = data.token || null; state.legacyPassword = state.token ? null : pw; state.loginError=""; state.registerNote="";
+        state.officerName = data.name || ""; state.isAdmin = /^admin$/i.test(String(data.role || "").trim());
+        state.checkpoints = data.checkpoints && typeof data.checkpoints === "object" ? data.checkpoints : null;
+        preloadPlaces(data.places); go("tower"); flushOfflineQueue(); flushScanQueue();
+        // load the camera scanner now (it's also saved for offline use) so the first scan opens straight away
+        if(state.checkpoints) setTimeout(()=>{ loadLib("scanner").catch(()=>{}); }, 1500);
+      }
+      else { state.loginError = (data && data.error) || (ok ? t("networkError") : t("loginErrorMsg")); render(); $("#in-pw").focus(); }
     });
+    // wake the sheet script while the officer types, so Sign In doesn't wait for it to start
+    $("#in-id").addEventListener("focus", warmUpScript);
   }
 
   const backBtn = $("#btn-global-back");
@@ -1364,12 +2272,14 @@ function bindEvents(){
       if(!state.patrol.sessionId) startPatrolSession(); // first tower pick of this patrol starts the clock
       if(state.tower.singleLevel) selectLevel(state.tower.level); else go("level");
     }));
+    const qrBtn = $("#btn-qr-print");
+    if(qrBtn) qrBtn.addEventListener("click", openQrPrint);
   }
   if(state.screen==="level"){
     $$("[data-level]").forEach(b=>b.addEventListener("click", ()=> selectLevel(Number(b.dataset.level))));
   }
   if(state.screen==="location"){
-    $$("[data-location]").forEach(b=>b.addEventListener("click", ()=>{ state.location = locationsFor(state.tower).find(x=>x.id===b.dataset.location);
+    $$("[data-location]").forEach(b=>b.addEventListener("click", ()=>{ state.location = locationsFor(state.tower).find(x=>x.id===b.dataset.location); state.cpArea = null;
       const cats = categoriesFor(state.tower);
       if(cats.length===1){ state.activeCategory = cats[0].id; state.draft = {text:"", media:[], risk:DEFAULT_RISK}; state.selectedAssets = []; state.reportedTags = []; state.reportedIssues = []; go("form"); }
       else go("category");
@@ -1381,10 +2291,36 @@ function bindEvents(){
       const q = state.locationFilter.toLowerCase();
       $$("[data-location]").forEach(b=>{ b.hidden = !!q && !b.textContent.toLowerCase().includes(q); });
     });
+    // the level arrows finish this level: blocked while a checkpoint here isn't scanned or marked missed
     const nextLevelBtn = $("#btn-next-level");
-    if(nextLevelBtn) nextLevelBtn.addEventListener("click", ()=> selectLevel(state.level+1));
+    if(nextLevelBtn) nextLevelBtn.addEventListener("click", ()=> leaveLevelTo(state.level+1));
+    const prevLevelBtn = $("#btn-prev-level");
+    if(prevLevelBtn) prevLevelBtn.addEventListener("click", ()=> leaveLevelTo(state.level-1));
+    const scanBtn = $("#btn-scan-cp");
+    if(scanBtn) scanBtn.addEventListener("click", openScanner);
+    // folded parts of a scanned level
+    const listBtn = $("#btn-cp-list");
+    if(listBtn) listBtn.addEventListener("click", ()=>{ state.cpShowList = !state.cpShowList; render(); });
+    const openBtn = $("#btn-cp-open");
+    if(openBtn) openBtn.addEventListener("click", ()=>{ state.cpShowPending = !state.cpShowPending; render(); });
+    const otherBtn = $("#btn-cp-other");
+    if(otherBtn) otherBtn.addEventListener("click", ()=>{ state.cpShowGrid = !state.cpShowGrid; render(); });
+    // a scanned checkpoint opens its place again
+    $$("[data-cp-open]").forEach(b=>b.addEventListener("click", ()=>{
+      const cp = cpList(state.tower, state.level).find(c=>c.id===b.dataset.cpOpen);
+      if(cp) cpOpenArea(cp);
+    }));
+    $$("[data-cp-miss]").forEach(b=>b.addEventListener("click", ()=>{
+      const cp = cpList(state.tower, state.level).find(c=>c.id===b.dataset.cpMiss);
+      if(cp) openMissedDialog(cp);
+    }));
   }
   if(state.screen==="category"){
+    // the place a scan opened: scan the next checkpoint, or go back to the level
+    const scanNextBtn = $("#btn-cp-scan-next");
+    if(scanNextBtn) scanNextBtn.addEventListener("click", openScanner);
+    const levelBtn = $("#btn-cp-level");
+    if(levelBtn) levelBtn.addEventListener("click", ()=>{ state.cpArea = null; go("location"); });
     $$("[data-category]").forEach(b=>b.addEventListener("click", async ()=>{
       state.activeCategory = b.dataset.category;
       state.draft = {text:"", media:[], risk:DEFAULT_RISK};
@@ -1473,10 +2409,13 @@ function bindEvents(){
     $$("[data-remove]").forEach(b=>b.addEventListener("click", ()=>{ state.reports = state.reports.filter(r=>r.id!==b.dataset.remove); render(); }));
     const finalBtn = $("#btn-final-submit");
     if(finalBtn) finalBtn.addEventListener("click", async ()=>{
+      if(cpBlockSubmit()) return;   // every checkpoint of every level patrolled: scanned, or missed with a reason
       if(!confirm(t("finalConfirm", state.reports.length))) return;
+      state.lastCp = cpStats();
       // sending the round ends this patrol; its total time goes with it
       const totals = state.patrol.sessionId ? patrolTotals() : null;
-      const patrolInfo = totals ? { sessionId: state.patrol.sessionId, patrolDuration: totals.totalDuration, patrolDurationMs: totals.totalDurationMs, patrolPaused: totals.totalPaused } : {};
+      const patrolInfo = { ...(totals ? { sessionId: state.patrol.sessionId, patrolDuration: totals.totalDuration, patrolDurationMs: totals.totalDurationMs, patrolPaused: totals.totalPaused } : {}),
+        submitId: submitIdFor(state.reports) };   // v7: sent again (retry / offline copy) -> saved once
       const stillSending = state.reports.flatMap(r=>r.media).map(m=>m.uploading).filter(Boolean);
       if(stillSending.length && navigator.onLine){
         state.sending = true; render();
@@ -1512,12 +2451,41 @@ function bindEvents(){
       }
     });
   }
+  if(state.screen==="summary"){
+    // a patrol with checkpoints but no issues is finished here (nothing to send but its time)
+    const finishBtn = $("#btn-finish-patrol");
+    if(finishBtn) finishBtn.addEventListener("click", ()=>{
+      if(cpBlockSubmit()) return;
+      if(!confirm(t("cpFinishConfirm"))) return;
+      state.lastCp = cpStats();
+      endPatrol("Submit");
+      state.lastSaved = 0; state.lastSkipped = 0; state.reports = []; state.offlineSuccess = false;
+      go("success");
+    });
+    $$("[data-cp-goto]").forEach(b=>b.addEventListener("click", ()=>{
+      const [code, lv] = b.dataset.cpGoto.split("|");
+      const tower = TOWERS.find(x=>x.cpCode===code);
+      if(!tower) return;
+      state.tower = tower; state.location = null; state.cpSubmitBlocked = false;
+      state.cpBlocked = b.dataset.cpGoto;   // its missing checkpoints show in red straight away
+      selectLevel(Number(lv));
+    }));
+  }
+  if(state.screen==="qrprint" && state.qrPrint){
+    const towerSel = $("#qr-tower");
+    if(towerSel) towerSel.addEventListener("change", ()=>{ state.qrPrint.tower = towerSel.value; state.qrPrint.level = ""; render(); });
+    const levelSel = $("#qr-level");
+    if(levelSel) levelSel.addEventListener("change", ()=>{ state.qrPrint.level = levelSel.value; render(); });
+    const printBtn = $("#btn-qr-print-now");
+    if(printBtn) printBtn.addEventListener("click", ()=> window.print());
+  }
   if(state.screen==="success"){
     $("#btn-new-patrol").addEventListener("click", ()=>{
       state.tower=null; state.level=null; state.location=null; state.activeCategory=null;
       state.selectedAssets=[]; state.reportedTags=[]; state.draft={text:"",media:[],risk:DEFAULT_RISK}; state.reports=[]; state.lastSkipped=0; state.lastSaved=0;
       state.patrol={sessionId:null,startedAt:null,paused:false,lastPauseAt:null,pausedMs:0};
       state.pendingIssues=[]; state.pendingLoading=false;
+      state.cpLog={}; state.cpBlocked=null; state.cpSubmitBlocked=false; state.lastCp=null; state.cpArea=null;
       go("tower");
     });
   }
@@ -1553,6 +2521,7 @@ if("serviceWorker" in navigator && (location.protocol === "https:" || location.h
   window.addEventListener("load", ()=>{ navigator.serviceWorker.register("sw.js").catch(()=>{ /* the app works without it */ }); });
 }
 
+warmUpScript();
 render();
 // (a patrol queued in a previous offline session is sent right after sign-in)
 
@@ -1570,6 +2539,8 @@ window.addEventListener("popstate", ()=>{
     // Re-claim a history entry immediately so the page itself doesn't
     // navigate away while the officer is deciding.
     history.pushState({fls:true}, "", "");
+    // the scanner or a checkpoint window is open: back just closes it
+    if(cpOverlayOpen()){ closeCpOverlay(); return; }
     confirmAndLogout();
   }
   // Not signed in (still on the login screen) — nothing to protect,
